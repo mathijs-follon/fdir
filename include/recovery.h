@@ -55,8 +55,10 @@ typedef struct {
 fdir_config_t fdir_config_default(void);
 
 /**
- * Initialise FDIR. Copies config. Make sure all required port functions are implemented from port.h
- * config may be NULL to use fdir_config_default().
+ * Initialise FDIR. Copies config (NULL uses fdir_config_default()).
+ * Override the required weak port hooks in port.h before calling
+ * (fdir_get_now_ms, fdir_post_failure, fdir_isolate_current_worker);
+ * the defaults abort().
  */
 fdir_status_t fdir_init(const fdir_config_t *config);
 
@@ -68,7 +70,7 @@ const char *fdir_entity_name(fdir_entity_id_t id);
 
 fdir_mode_t fdir_system_mode(void);
 
-/* NULL before fdir_init() */
+/** Pointer to the copied config. Valid after fdir_init(). */
 const fdir_config_t *fdir_config(void);
 
 uint32_t fdir_heartbeat_max_age_ms(void);
@@ -81,21 +83,22 @@ void fdir_handle_failure(const fdir_failure_report_t *report);
 
 
 /**
- * Supervisor watchdog scan. Raises FAILURE_REASON_WATCHDOG for stale entities
+ * Supervisor watchdog scan. Raises FDIR_REASON_WATCHDOG for stale entities
  * and runs the same recovery path.
  */
 void fdir_check_watchdogs(void);
 
 /** Force DEGRADED if currently NOMINAL. */
-void fdir_enter_degraded(void);
+void fdir_enter_degraded_mode(void);
 
 /** Force SAFE mode. */
-void fdir_enter_safe(void);
+void fdir_enter_safe_mode(void);
 
 /**
- * Enter REBOOT_PENDING, emit event, and call port.request_reboot if set.
+ * Enter REBOOT_PENDING, emit a mode-change event, then call
+ * fdir_request_reboot() (weak port hook; default is a no-op).
  */
-void fdir_request_reboot(const char *reason);
+void fdir_try_reboot(const char *reason);
 
 /** Emit a free-form note via the event sink. */
 void fdir_log_note(const char *note);
