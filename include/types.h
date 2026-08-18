@@ -64,8 +64,9 @@ typedef enum {
 } fdir_reason_t;
 
 /**
- * Recovery actions chosen by policy or default restart budget logic.
- * Application maps these onto its own restart / degrade / reboot hooks.
+ * Recovery actions chosen by policy or default restart-budget logic.
+ * RESTART uses the entity restart callback; REBOOT calls the weak
+ * fdir_request_reboot() port hook.
  */
 typedef enum {
     FDIR_ACTION_NONE = 0,

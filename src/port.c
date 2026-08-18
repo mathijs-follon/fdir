@@ -20,11 +20,11 @@ __attribute((weak)) void fdir_isolate_current_worker(void)
 __attribute((weak)) void fdir_emit_event(const fdir_event_t *event)
 {
     (void)event;
-    // abort(); Optional if you dont want to listen for events
+    // Optional hook: default is a no-op. Override to log or downlink events.
 }
 
 __attribute((weak)) void fdir_request_reboot(const char *reason)
 {
     (void)reason;
-    // abort(); Optional if you can't reboot the system
+    // Optional hook: default is a no-op. Override to reset the board.
 }

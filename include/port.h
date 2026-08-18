@@ -7,8 +7,13 @@
 extern "C" {
 #endif
 
-/* Weak defined (__attribute__((weak))), to be overridden by the port implementation
- * You do not need to implement this function when using C++. The wrapper will provide a different interface.
+/*
+ * Weak port hooks (__attribute__((weak)) in src/port.c). Provide strong
+ * definitions in the integrating firmware to override the defaults.
+ * Required (default abort()): fdir_get_now_ms, fdir_post_failure,
+ * fdir_isolate_current_worker.
+ * Optional (default no-op): fdir_emit_event, fdir_request_reboot.
+ * C++ users can skip these; the wrapper supplies a different interface.
  */
 
 uint32_t fdir_get_now_ms(void);
