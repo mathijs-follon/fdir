@@ -7,7 +7,9 @@
 extern "C" {
 #endif
 
-/* Weak defined (extern "C" __attribute__((weak))), to be overridden by the port implementation */
+/* Weak defined (__attribute__((weak))), to be overridden by the port implementation
+ * You do not need to implement this function when using C++. The wrapper will provide a different interface.
+ */
 
 uint32_t fdir_get_now_ms(void);
 

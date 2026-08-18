@@ -16,6 +16,14 @@ typedef uint8_t fdir_subsystem_id_t;
 #define FDIR_DETAIL_SIZE 32
 #endif
 
+#ifndef FDIR_ENTITY_CAP
+#define FDIR_ENTITY_CAP 16
+#endif
+
+#ifndef FDIR_SUBSYSTEM_CAP
+#define FDIR_SUBSYSTEM_CAP 8
+#endif
+
 typedef uint8_t fdir_bool_t;
 
 typedef enum {
