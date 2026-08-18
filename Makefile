@@ -1,14 +1,14 @@
 COMPILER    ?= gcc
 ARCHIVE     ?= ar
 CFLAGS      ?= -std=c11 -Wall -Wextra -Wpedantic -O2
-CPPFLAGS    ?= -Iinclude
 LINKERFLAGS ?=
 LIB_NAME    ?= fdir
 
 ROOT := $(abspath .)
+CPPFLAGS    ?= -I$(ROOT)/include -I$(ROOT)/src -I$(ROOT)/tests
 
 SOURCES      := $(wildcard $(ROOT)/src/*.c)
-OBJECTS      := $(SOURCES:$(ROOT)/src/%.c=$(ROOT)/build/%.o)
+OBJECTS      := $(SOURCES:$(ROOT)/src/%.c=$(ROOT)/build/obj/%.o)
 TEST_SOURCES := $(wildcard $(ROOT)/tests/*.c)
 LIBRARY      := $(ROOT)/build/lib$(LIB_NAME).a
 
@@ -20,15 +20,16 @@ COMPDB_SRCS         := $(SOURCES) $(ALL_EXAMPLE_SOURCES) $(TEST_SOURCES)
 all: $(LIBRARY) compile_commands.json
 
 $(LIBRARY): $(OBJECTS)
-	@mkdir -p $(ROOT)/build
+	@mkdir -p $(ROOT)/build/obj
 	$(ARCHIVE) rcs $@ $^
 
-$(ROOT)/build/%.o: $(ROOT)/src/%.c
-	@mkdir -p $(ROOT)/build
+$(ROOT)/build/obj/%.o: $(ROOT)/src/%.c
+	@mkdir -p $(ROOT)/build/obj
 	$(COMPILER) $(CPPFLAGS) $(CFLAGS) -c $< -o $@
 
 test: all
 	@mkdir -p $(ROOT)/build
+	@mkdir -p $(ROOT)/build/obj
 	@if [ -z "$(TEST_SOURCES)" ]; then \
 		echo "No test files found in $(ROOT)/tests/"; \
 	else \
@@ -38,7 +39,7 @@ test: all
 
 example: all
 ifndef EX
-	$(error Please specify an example folder, e.g., 'make example EX=my_folder')
+	$(error Please specify a child folder of the examples folder, e.g., 'make example EX=my_folder')
 endif
 	@mkdir -p $(ROOT)/build
 	$(COMPILER) $(CPPFLAGS) $(CFLAGS) $(wildcard $(ROOT)/examples/$(EX)/*.c) $(LIBRARY) $(LINKERFLAGS) \
