@@ -12,6 +12,11 @@ void fdir_health_init(void)
     g_entity_limit = 0U;
 }
 
+void fdir_health_set_entity_limit(uint8_t limit)
+{
+    g_entity_limit = limit;
+}
+
 void fdir_health_heartbeat_notify(fdir_entity_id_t id)
 {
     if (id >= g_entity_limit) {
