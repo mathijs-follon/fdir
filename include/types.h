@@ -98,6 +98,25 @@ typedef struct {
     uint8_t safe_mode_critical_failure_threshold;
 } fdir_config_t;
 
+typedef enum __attribute__((packed)) {
+    FDIR_EVENT_FAILURE = 0,
+    FDIR_EVENT_MODE_CHANGE,
+    FDIR_EVENT_RESTART,
+    FDIR_EVENT_WATCHDOG,
+    FDIR_EVENT_NOTE,
+    FDIR_EVENT_QUEUE_OVERFLOW,
+} fdir_event_kind_t;
+
+typedef struct {
+    fdir_event_kind_t kind;
+    fdir_mode_t       mode;
+    fdir_entity_id_t  entity;
+    fdir_reason_t     reason;
+    uint16_t          error_code;
+    uint32_t          timestamp_ms;
+    char              detail[FDIR_DETAIL_SIZE];
+} fdir_event_t;
+
 #ifdef __cplusplus
 }
 #endif
