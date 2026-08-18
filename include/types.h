@@ -16,6 +16,8 @@ typedef uint8_t fdir_subsystem_id_t;
 #define FDIR_DETAIL_SIZE 32
 #endif
 
+typedef uint8_t fdir_bool_t;
+
 typedef enum {
     FDIR_OK = 0,
     FDIR_ERR_PARAM = -1,
