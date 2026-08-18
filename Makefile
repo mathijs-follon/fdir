@@ -15,9 +15,9 @@ LIBRARY      := $(ROOT)/build/lib$(LIB_NAME).a
 ALL_EXAMPLE_SOURCES := $(wildcard $(ROOT)/examples/*/*.c)
 COMPDB_SRCS         := $(SOURCES) $(ALL_EXAMPLE_SOURCES) $(TEST_SOURCES)
 
-.PHONY: all clean example test
+.PHONY: all clean example test compile_commands.json
 
-all: $(LIBRARY)
+all: $(LIBRARY) compile_commands.json
 
 $(LIBRARY): $(OBJECTS)
 	@mkdir -p $(ROOT)/build
