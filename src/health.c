@@ -1,10 +1,16 @@
 #include "health.h"
 #include "internal.h"
 #include "port.h"
+#include <string.h>
 
 static fdir_health_snapshot_t g_health[FDIR_ENTITY_CAP];
 static uint8_t g_entity_limit;
 
+void fdir_health_init(void)
+{
+    memset(g_health, 0, sizeof(g_health));
+    g_entity_limit = 0U;
+}
 
 void fdir_health_heartbeat_notify(fdir_entity_id_t id)
 {

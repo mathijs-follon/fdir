@@ -13,7 +13,7 @@ extern "C" {
 
 uint32_t fdir_get_now_ms(void);
 
-int fidr_post_failure(const fdir_failure_report_t *report);
+int fdir_post_failure(const fdir_failure_report_t *report);
 
 void fdir_isolate_current_worker(void);
 
