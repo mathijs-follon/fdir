@@ -1,14 +1,11 @@
 #ifndef FDIR_H
 #define FDIR_H
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-int add(int a, int b);
-
-#ifdef __cplusplus
-}
-#endif
+#include "health.h"
+#include "port.h"
+#include "recovery.h"
+#include "report.h"
+#include "subsystem.h"
+#include "types.h"
 
 #endif /* FDIR_H */
