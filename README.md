@@ -2,6 +2,8 @@
 
 [![Compile and Test](https://github.com/mathijs-follon/fdir/actions/workflows/compile-and-test.yml/badge.svg)](https://github.com/mathijs-follon/fdir/actions/workflows/compile-and-test.yml)
 
+> Looking for the API? [click here](docs/api.md) 
+
 Portable C11 FDIR (Fault Detection, Isolation and Recovery) library for embedded and RTOS applications.
 
 FDIR is a fault-management pattern used in spacecraft, aviation, and safety-critical embedded systems. When a software component fails, the system detects the fault, isolates the affected entity, and applies a configurable recovery action: restart, degradation, safe mode, or reboot. `fdir` provides a small, deterministic framework for this behaviour.
