@@ -4,3 +4,4 @@ compile_commands.json
 *.gcov
 scripts/
 .venv
+*.tar.gz
