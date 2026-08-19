@@ -142,10 +142,11 @@ If you have questions about integrating the library, run into unexpected behavio
 
 ## Changelog
 
-Release notes: [docs/changenotes/v1.0.1.md](docs/changenotes/v1.0.1.md)
+Release notes: [docs/changenotes/v1.0.2.md](docs/changenotes/v1.0.2.md)
 
 | Version | Notes |
 |---------|-------|
+| [v1.0.2](docs/changenotes/v1.0.2.md) | Fix entity-register nested lock and unsynchronised mode mutators |
 | [v1.0.1](docs/changenotes/v1.0.1.md) | Fix restart-on-exhausted recursion (#1) and report_fault TOCTOU (#2) |
 | [v1.0.0](docs/changenotes/v1.0.0.md) | First stable C-only API; explicit port, internal failure queue, cooperative workers |
 | [v0.2.0](docs/changenotes/v0.2.0.md) | `fdir_post_failure` renamed to `fdir_submit_failure` |

@@ -4,6 +4,7 @@
 #include "fdir.h"
 #include "internal.h"
 
+#include <pthread.h>
 #include <string.h>
 
 static fdir_event_t g_last_event;
@@ -266,6 +267,49 @@ TEST(test_port_lock_used_during_report)
     ASSERT_EQ_INT(g_unlock_calls, 1);
 }
 
+static pthread_mutex_t g_entity_reg_mutex = PTHREAD_MUTEX_INITIALIZER;
+
+static void entity_reg_port_lock(void)
+{
+    (void)pthread_mutex_lock(&g_entity_reg_mutex);
+}
+
+static void entity_reg_port_unlock(void)
+{
+    (void)pthread_mutex_unlock(&g_entity_reg_mutex);
+}
+
+static int noop_restart(fdir_entity_id_t id, void *user)
+{
+    (void)id;
+    (void)user;
+    return 0;
+}
+
+TEST(test_entity_register_with_real_port_lock)
+{
+    fdir_config_t cfg = fdir_config_default();
+    fdir_entity_desc_t desc;
+    fdir_entity_id_t id;
+    fdir_port_t port = *test_port_default();
+
+    port.lock = entity_reg_port_lock;
+    port.unlock = entity_reg_port_unlock;
+    ASSERT_EQ_INT(fdir_init(&cfg, &port), FDIR_OK);
+
+    desc.name = "locked_reg";
+    desc.max_restarts = 1U;
+    desc.max_watchdog_restarts = 1U;
+    desc.on_exhausted = FDIR_ACTION_DEGRADE;
+    desc.linked_subsystem = FDIR_SUBSYSTEM_NONE;
+    desc.restart = noop_restart;
+    desc.decide = NULL;
+    desc.user = NULL;
+
+    ASSERT_EQ_INT(fdir_entity_register(&desc, &id), FDIR_OK);
+    ASSERT_EQ_INT((int)id, 0);
+}
+
 int main(void)
 {
     RUN(test_copy_detail_normal);
@@ -285,5 +329,6 @@ int main(void)
     RUN(test_entity_may_run_false_in_safe_mode);
     RUN(test_entity_may_run_false_for_invalid_entity);
     RUN(test_port_lock_used_during_report);
+    RUN(test_entity_register_with_real_port_lock);
     return test_harness_summary();
 }

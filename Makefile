@@ -73,7 +73,7 @@ test: all
 	for src in $(TEST_SOURCES); do \
 		name=$$(basename $$src .c); \
 		bin=$(ROOT)/build/tests/$$name; \
-		$(COMPILER) $(CPPFLAGS) $(CFLAGS) $$src $(ROOT)/tests/test_port.c $(LIBRARY) $(LINKERFLAGS) -o $$bin || { failed=1; continue; }; \
+		$(COMPILER) $(CPPFLAGS) $(CFLAGS) $$src $(ROOT)/tests/test_port.c $(LIBRARY) $(LINKERFLAGS) -lpthread -o $$bin || { failed=1; continue; }; \
 		$$bin || failed=1; \
 	done; \
 	exit $$failed

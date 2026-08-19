@@ -116,12 +116,19 @@ static void notify_system_handler(fdir_mode_t mode, const fdir_failure_report_t 
     }
 }
 
+static void set_mode(fdir_mode_t mode, fdir_entity_id_t entity, const char *detail,
+                     const fdir_failure_report_t *report);
+
+static void enter_degraded_mode_unsafe(void);
+static void enter_safe_mode_unsafe(void);
+static void try_reboot_unsafe(const char *reason);
+
 static void evaluate_dual_path(void)
 {
     const fdir_config_t *cfg = fdir_internal_get_config();
 
     if (fdir_subsystems_critical_unavailable_count() >= cfg->safe_mode_critical_failure_threshold) {
-        fdir_enter_safe_mode();
+        enter_safe_mode_unsafe();
     }
 }
 
@@ -136,6 +143,28 @@ static void set_mode(fdir_mode_t mode, fdir_entity_id_t entity, const char *deta
     emit_event_full(FDIR_EVENT_MODE_CHANGE, g_mode, entity, FDIR_REASON_USER, 0U,
                     FDIR_LEVEL_SYSTEM, FDIR_ANOMALY_RAISED, detail);
     notify_system_handler(g_mode, report);
+}
+
+static void enter_degraded_mode_unsafe(void)
+{
+    if (g_mode == FDIR_MODE_NOMINAL) {
+        set_mode(FDIR_MODE_DEGRADED, FDIR_ENTITY_NONE, "degraded", NULL);
+    }
+}
+
+static void enter_safe_mode_unsafe(void)
+{
+    if (g_mode != FDIR_MODE_REBOOT_PENDING) {
+        set_mode(FDIR_MODE_SAFE, FDIR_ENTITY_NONE, "safe", NULL);
+    }
+}
+
+static void try_reboot_unsafe(const char *reason)
+{
+    const char *why = (reason != NULL) ? reason : "reboot";
+
+    set_mode(FDIR_MODE_REBOOT_PENDING, FDIR_ENTITY_NONE, why, NULL);
+    fdir_request_reboot(why);
 }
 
 static fdir_action_t default_decide(const fdir_entity_slot_t *slot, const fdir_failure_report_t *report)
@@ -241,7 +270,7 @@ static void apply_action(fdir_entity_slot_t *slot, fdir_entity_id_t id, fdir_act
                 fdir_internal_emit_subsystem_state(sub, id, report->reason, report->error_code,
                                                    FDIR_ANOMALY_RAISED, "degraded");
             }
-            fdir_enter_degraded_mode();
+            enter_degraded_mode_unsafe();
             break;
 
         case FDIR_ACTION_UNAVAILABLE:
@@ -250,7 +279,7 @@ static void apply_action(fdir_entity_slot_t *slot, fdir_entity_id_t id, fdir_act
                 fdir_internal_emit_subsystem_state(sub, id, report->reason, report->error_code,
                                                    FDIR_ANOMALY_RAISED, "unavailable");
             }
-            fdir_enter_degraded_mode();
+            enter_degraded_mode_unsafe();
             evaluate_dual_path();
             break;
 
@@ -260,7 +289,7 @@ static void apply_action(fdir_entity_slot_t *slot, fdir_entity_id_t id, fdir_act
                 fdir_internal_emit_subsystem_state(sub, id, report->reason, report->error_code,
                                                    FDIR_ANOMALY_RAISED, "unavailable");
             }
-            fdir_enter_safe_mode();
+            enter_safe_mode_unsafe();
             break;
 
         case FDIR_ACTION_REBOOT:
@@ -269,7 +298,7 @@ static void apply_action(fdir_entity_slot_t *slot, fdir_entity_id_t id, fdir_act
                 fdir_internal_emit_subsystem_state(sub, id, report->reason, report->error_code,
                                                    FDIR_ANOMALY_RAISED, "unavailable");
             }
-            fdir_try_reboot(report->detail[0] != '\0' ? report->detail : "fdir_reboot");
+            try_reboot_unsafe(report->detail[0] != '\0' ? report->detail : "fdir_reboot");
             break;
 
         default:
@@ -327,7 +356,7 @@ fdir_status_t fdir_entity_register(const fdir_entity_desc_t *desc, fdir_entity_i
     g_entities[id].watchdog_restart_count = 0U;
 
     fdir_health_set_entity_limit(g_entity_count);
-    fdir_health_reset(id);
+    fdir_health_reset_unsafe(id);
     *out_id = id;
 
     fdir_port_sync_exit();
@@ -478,16 +507,16 @@ fdir_status_t fdir_deescalate_system_mode(void)
 
 void fdir_enter_degraded_mode(void)
 {
-    if (g_mode == FDIR_MODE_NOMINAL) {
-        set_mode(FDIR_MODE_DEGRADED, FDIR_ENTITY_NONE, "degraded", NULL);
-    }
+    fdir_port_sync_enter();
+    enter_degraded_mode_unsafe();
+    fdir_port_sync_exit();
 }
 
 void fdir_enter_safe_mode(void)
 {
-    if (g_mode != FDIR_MODE_REBOOT_PENDING) {
-        set_mode(FDIR_MODE_SAFE, FDIR_ENTITY_NONE, "safe", NULL);
-    }
+    fdir_port_sync_enter();
+    enter_safe_mode_unsafe();
+    fdir_port_sync_exit();
 }
 
 void fdir_reassess_system_mode(void)
@@ -499,10 +528,9 @@ void fdir_reassess_system_mode(void)
 
 void fdir_try_reboot(const char *reason)
 {
-    const char *why = (reason != NULL) ? reason : "reboot";
-
-    set_mode(FDIR_MODE_REBOOT_PENDING, FDIR_ENTITY_NONE, why, NULL);
-    fdir_request_reboot(why);
+    fdir_port_sync_enter();
+    try_reboot_unsafe(reason);
+    fdir_port_sync_exit();
 }
 
 void fdir_log_note(const char *note)
@@ -573,7 +601,7 @@ void fdir_handle_failure(const fdir_failure_report_t *report)
     }
 
     if (report->entity >= g_entity_count || !g_entities[report->entity].used) {
-        fdir_enter_degraded_mode();
+        enter_degraded_mode_unsafe();
         fdir_port_sync_exit();
         return;
     }

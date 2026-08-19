@@ -20,7 +20,9 @@ The integrator must ensure **at most one supervisor context** executes
 
 When `lock` and `unlock` are provided, the library wraps internal state updates
 (including the internal failure queue) and documents-safe worker entry points
-(`heartbeat`, `may_run`, health queries) with the same lock.
+(`heartbeat`, `may_run`, health queries) with the same lock. Mode changes through
+`fdir_enter_degraded_mode`, `fdir_enter_safe_mode`, and `fdir_try_reboot` also
+take the port lock when called from application code.
 
 Use a mutex or RTOS critical section. Locks must not call back into `fdir`.
 Port callbacks (`emit_event`, `request_reboot`) and entity hooks (`restart`, `decide`) must not re-enter the library while the port lock is held.
