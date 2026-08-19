@@ -2,9 +2,9 @@ Minimal fdir example with no RTOS and no threads.
 
 Both variants register one entity and drive it through three scenarios:
 
-1. Single fault - fdir restarts the entity
-2. Three faults - restart budget exhausted, mode changes to DEGRADED
-3. Heartbeat miss - watchdog detects the stale entity and restarts it
+1. Single fault: fdir restarts the entity
+2. Three faults: restart budget exhausted, mode changes to DEGRADED
+3. Heartbeat miss: watchdog detects the stale entity and restarts it
 
 ## c/
 
