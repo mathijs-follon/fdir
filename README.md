@@ -1,4 +1,4 @@
-# fdir
+# FDIR: Fault Detection, Isolation & Recovery
 
 [![Compile and Test](https://github.com/mathijs-follon/fdir/actions/workflows/compile-and-test.yml/badge.svg)](https://github.com/mathijs-follon/fdir/actions/workflows/compile-and-test.yml)
 
