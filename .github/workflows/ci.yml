@@ -11,11 +11,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Build shared library.
+        with:
+          submodules: recursive
+
+      - name: Build library
         run: make
 
-      - name: Test shared library.
+      - name: Test library
         run: make test
 
-      - name: Build examples.
-        run: make examples
+      - name: Build examples (C)
+        run: make getting_started filecopy freertos
+
+      - name: Build examples (C++)
+        run: make getting_started_cxx filecopy_cxx freertos_cxx
