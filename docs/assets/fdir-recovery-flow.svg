@@ -1,0 +1,65 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="760" viewBox="0 0 1280 760" role="img">
+<rect width="1280" height="760" fill="#0f172a"/>
+<style>
+text { font-family: Inter, Segoe UI, Arial, sans-serif; }
+.title { font-size: 28px; font-weight: 700; fill: #f8fafc; }
+.subtitle { font-size: 15px; fill: #cbd5e1; }
+.box-title { font-size: 18px; font-weight: 700; fill: #f8fafc; }
+.body { font-size: 14px; fill: #dbe4ee; }
+.small { font-size: 12px; fill: #cbd5e1; }
+.caption { font-size: 13px; fill: #94a3b8; }
+</style>
+<text x="60" y="70" class="title">Failure Handling and Escalation Flow</text>
+<text x="60" y="102" class="subtitle">From fault detection through isolation to recovery or escalation.</text>
+<rect x="40" y="160" rx="18" ry="18" width="210" height="120" fill="#111827" stroke="#38bdf8" stroke-width="2"/>
+<text x="60" y="192" class="box-title">1. Detect failure</text>
+<text x="60" y="222" class="body">I/O error, timeout,</text>
+<text x="60" y="242" class="body">watchdog miss</text>
+<rect x="370" y="160" rx="18" ry="18" width="210" height="120" fill="#111827" stroke="#38bdf8" stroke-width="2"/>
+<text x="390" y="192" class="box-title">2. Submit report</text>
+<text x="390" y="222" class="body">fdir_submit_failure()</text>
+<text x="390" y="242" class="body">or Entity::report_fault()</text>
+<rect x="700" y="160" rx="18" ry="18" width="210" height="120" fill="#111827" stroke="#334155" stroke-width="2"/>
+<text x="720" y="192" class="box-title">3. Isolate worker</text>
+<text x="720" y="222" class="body">stop or suspend faulting</text>
+<text x="720" y="242" class="body">task or thread context</text>
+<rect x="1030" y="160" rx="18" ry="18" width="210" height="120" fill="#111827" stroke="#334155" stroke-width="2"/>
+<text x="1050" y="192" class="box-title">4. Supervisor handles</text>
+<text x="1050" y="222" class="body">restart budget check</text>
+<text x="1050" y="242" class="body">watchdog and subsystem rules</text>
+<rect x="40" y="430" rx="18" ry="18" width="210" height="170" fill="#12281e" stroke="#22c55e" stroke-width="2"/>
+<text x="60" y="462" class="box-title">Restart</text>
+<text x="60" y="492" class="body">entity restarted</text>
+<text x="60" y="512" class="body">budget decremented</text>
+<rect x="370" y="430" rx="18" ry="18" width="210" height="170" fill="#2a210f" stroke="#f59e0b" stroke-width="2"/>
+<text x="390" y="462" class="box-title">Degraded</text>
+<text x="390" y="492" class="body">system stays operational</text>
+<text x="390" y="512" class="body">reduced capability</text>
+<rect x="700" y="430" rx="18" ry="18" width="210" height="170" fill="#311717" stroke="#ef4444" stroke-width="2"/>
+<text x="720" y="462" class="box-title">Safe</text>
+<text x="720" y="492" class="body">critical paths lost</text>
+<text x="720" y="512" class="body">mission protection</text>
+<rect x="1030" y="430" rx="18" ry="18" width="210" height="170" fill="#24173a" stroke="#a78bfa" stroke-width="2"/>
+<text x="1050" y="462" class="box-title">Reboot</text>
+<text x="1050" y="492" class="body">optional final step</text>
+<text x="1050" y="512" class="body">platform decides</text>
+<line x1="250" y1="220" x2="370" y2="220" stroke="#38bdf8" stroke-width="4" stroke-linecap="round"/>
+<polygon points="370.0,220.0 350.0,230.0 350.0,210.0" fill="#38bdf8"/>
+<line x1="580" y1="220" x2="700" y2="220" stroke="#38bdf8" stroke-width="4" stroke-linecap="round"/>
+<polygon points="700.0,220.0 680.0,230.0 680.0,210.0" fill="#38bdf8"/>
+<line x1="910" y1="220" x2="1030" y2="220" stroke="#334155" stroke-width="4" stroke-linecap="round"/>
+<polygon points="1030.0,220.0 1010.0,230.0 1010.0,210.0" fill="#334155"/>
+<line x1="1135" y1="280" x2="145" y2="430" stroke="#22c55e" stroke-width="4" stroke-linecap="round"/>
+<polygon points="145.0,430.0 163.3,417.1 166.3,436.9" fill="#22c55e"/>
+<text x="637.9" y="341.2" text-anchor="middle" class="small" transform="rotate(-8.6 637.9 341.2)" dominant-baseline="middle">restart succeeds</text>
+<line x1="1135" y1="280" x2="475" y2="430" stroke="#f59e0b" stroke-width="4" stroke-linecap="round"/>
+<polygon points="475.0,430.0 492.3,415.8 496.7,435.3" fill="#f59e0b"/>
+<text x="801.9" y="341.3" text-anchor="middle" class="small" transform="rotate(-12.8 801.9 341.3)" dominant-baseline="middle">budget exhausted</text>
+<line x1="1135" y1="280" x2="805" y2="430" stroke="#ef4444" stroke-width="4" stroke-linecap="round"/>
+<polygon points="805.0,430.0 819.1,412.6 827.3,430.8" fill="#ef4444"/>
+<text x="964.2" y="342.3" text-anchor="middle" class="small" transform="rotate(-24.4 964.2 342.3)" dominant-baseline="middle">critical threshold</text>
+<line x1="1135" y1="280" x2="1135" y2="430" stroke="#a78bfa" stroke-width="4" stroke-linecap="round"/>
+<polygon points="1135.0,430.0 1125.0,410.0 1145.0,410.0" fill="#a78bfa"/>
+<text x="1149.0" y="355.0" text-anchor="middle" class="small" transform="rotate(90.0 1149.0 355.0)" dominant-baseline="middle">reboot requested</text>
+<text x="60" y="690" class="caption">The supervisor applies restart budgets, subsystem rules, and configured exhaustion actions to choose the recovery outcome.</text>
+</svg>

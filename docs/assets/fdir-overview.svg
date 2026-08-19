@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="760" viewBox="0 0 1280 760" role="img">
+<rect width="1280" height="760" fill="#0f172a"/>
+<style>
+text { font-family: Inter, Segoe UI, Arial, sans-serif; }
+.title { font-size: 28px; font-weight: 700; fill: #f8fafc; }
+.subtitle { font-size: 15px; fill: #cbd5e1; }
+.box-title { font-size: 18px; font-weight: 700; fill: #f8fafc; }
+.body { font-size: 14px; fill: #dbe4ee; }
+.small { font-size: 12px; fill: #cbd5e1; }
+.caption { font-size: 13px; fill: #94a3b8; }
+</style>
+<text x="60" y="70" class="title">How fdir Fits Into an Embedded System</text>
+<text x="60" y="102" class="subtitle">Detection stays in the application; recovery policy stays in the supervisor.</text>
+<rect x="40" y="160" rx="18" ry="18" width="210" height="170" fill="#132238" stroke="#38bdf8" stroke-width="2"/>
+<text x="60" y="192" class="box-title">Entities</text>
+<text x="60" y="222" class="body">tasks, threads, drivers</text>
+<text x="60" y="242" class="body">heartbeat periodically</text>
+<text x="60" y="262" class="body">report faults on failure</text>
+<rect x="370" y="160" rx="18" ry="18" width="210" height="170" fill="#111827" stroke="#334155" stroke-width="2"/>
+<text x="390" y="192" class="box-title">Failure Queue</text>
+<text x="390" y="222" class="body">port hook or lambda</text>
+<text x="390" y="242" class="body">bounded transport</text>
+<text x="390" y="262" class="body">decouples producers</text>
+<text x="390" y="282" class="body">from supervisor</text>
+<rect x="700" y="160" rx="18" ry="18" width="210" height="170" fill="#111827" stroke="#334155" stroke-width="2"/>
+<text x="720" y="192" class="box-title">Supervisor</text>
+<text x="720" y="222" class="body">handle queued failures</text>
+<text x="720" y="242" class="body">check watchdogs</text>
+<text x="720" y="262" class="body">apply recovery policy</text>
+<rect x="1030" y="160" rx="18" ry="18" width="210" height="170" fill="#111827" stroke="#334155" stroke-width="2"/>
+<text x="1050" y="192" class="box-title">Recovery Actions</text>
+<text x="1050" y="222" class="body">restart entity</text>
+<text x="1050" y="242" class="body">degrade mode</text>
+<text x="1050" y="262" class="body">safe mode</text>
+<text x="1050" y="282" class="body">request reboot</text>
+<rect x="40" y="430" rx="18" ry="18" width="300" height="170" fill="#111827" stroke="#334155" stroke-width="2"/>
+<text x="60" y="462" class="box-title">Subsystem Model</text>
+<text x="60" y="492" class="body">group related entities</text>
+<text x="60" y="512" class="body">mark available or degraded</text>
+<text x="60" y="532" class="body">count critical-path outages</text>
+<rect x="625" y="430" rx="18" ry="18" width="360" height="170" fill="#111827" stroke="#334155" stroke-width="2"/>
+<text x="645" y="462" class="box-title">Port Integration</text>
+<text x="645" y="492" class="body">time source</text>
+<text x="645" y="512" class="body">failure submission</text>
+<text x="645" y="532" class="body">current-worker isolation</text>
+<text x="645" y="552" class="body">optional event logging and reboot</text>
+<line x1="250" y1="245" x2="370" y2="245" stroke="#38bdf8" stroke-width="4" stroke-linecap="round"/>
+<polygon points="370.0,245.0 350.0,255.0 350.0,235.0" fill="#38bdf8"/>
+<text x="310.0" y="259.0" text-anchor="middle" class="small" transform="rotate(0.0 310.0 259.0)" dominant-baseline="middle">fault report</text>
+<line x1="580" y1="245" x2="700" y2="245" stroke="#38bdf8" stroke-width="4" stroke-linecap="round"/>
+<polygon points="700.0,245.0 680.0,255.0 680.0,235.0" fill="#38bdf8"/>
+<text x="640.0" y="259.0" text-anchor="middle" class="small" transform="rotate(0.0 640.0 259.0)" dominant-baseline="middle">supervisor drains</text>
+<line x1="910" y1="245" x2="1030" y2="245" stroke="#334155" stroke-width="4" stroke-linecap="round"/>
+<polygon points="1030.0,245.0 1010.0,255.0 1010.0,235.0" fill="#334155"/>
+<text x="970.0" y="259.0" text-anchor="middle" class="small" transform="rotate(0.0 970.0 259.0)" dominant-baseline="middle">decision</text>
+<line x1="340" y1="515" x2="700" y2="330" stroke="#ef4444" stroke-width="4" stroke-linecap="round"/>
+<polygon points="700.0,330.0 686.8,348.0 677.6,330.2" fill="#ef4444"/>
+<text x="526.4" y="435.0" text-anchor="middle" class="small" transform="rotate(-27.2 526.4 435.0)" dominant-baseline="middle">critical-path state</text>
+<line x1="805" y1="430" x2="805" y2="330" stroke="#a78bfa" stroke-width="4" stroke-linecap="round"/>
+<polygon points="805.0,330.0 815.0,350.0 795.0,350.0" fill="#a78bfa"/>
+<text x="819.0" y="380.0" text-anchor="middle" class="small" transform="rotate(-90.0 819.0 380.0)" dominant-baseline="middle">hooks</text>
+<text x="60" y="690" class="caption">Typical usage: entities detect faults locally, submit them through a queue, and let the supervisor apply restart or escalation policy.</text>
+</svg>

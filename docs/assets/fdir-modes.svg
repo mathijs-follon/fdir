@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="760" viewBox="0 0 1280 760" role="img">
+<rect width="1280" height="760" fill="#0f172a"/>
+<style>
+text { font-family: Inter, Segoe UI, Arial, sans-serif; }
+.title { font-size: 28px; font-weight: 700; fill: #f8fafc; }
+.subtitle { font-size: 15px; fill: #cbd5e1; }
+.box-title { font-size: 18px; font-weight: 700; fill: #f8fafc; }
+.body { font-size: 14px; fill: #dbe4ee; }
+.small { font-size: 12px; fill: #cbd5e1; }
+.caption { font-size: 13px; fill: #94a3b8; }
+</style>
+<text x="60" y="70" class="title">Operating Modes and Escalation</text>
+<text x="60" y="102" class="subtitle">System mode changes only through the supervisor recovery path.</text>
+<rect x="40" y="160" rx="18" ry="18" width="210" height="170" fill="#12281e" stroke="#22c55e" stroke-width="2"/>
+<text x="60" y="192" class="box-title">NOMINAL</text>
+<text x="60" y="222" class="body">all entities within budget</text>
+<text x="60" y="242" class="body">critical paths available</text>
+<rect x="370" y="160" rx="18" ry="18" width="210" height="170" fill="#2a210f" stroke="#f59e0b" stroke-width="2"/>
+<text x="390" y="192" class="box-title">DEGRADED</text>
+<text x="390" y="222" class="body">entity restart budget used</text>
+<text x="390" y="242" class="body">reduced but valid operation</text>
+<rect x="700" y="160" rx="18" ry="18" width="210" height="170" fill="#311717" stroke="#ef4444" stroke-width="2"/>
+<text x="720" y="192" class="box-title">SAFE</text>
+<text x="720" y="222" class="body">too many critical subsystems</text>
+<text x="720" y="242" class="body">protect system state</text>
+<rect x="1030" y="160" rx="18" ry="18" width="210" height="170" fill="#24173a" stroke="#a78bfa" stroke-width="2"/>
+<text x="1050" y="192" class="box-title">REBOOT_PENDING</text>
+<text x="1050" y="222" class="body">reboot requested</text>
+<text x="1050" y="242" class="body">platform hook executes</text>
+<line x1="250" y1="245" x2="370" y2="245" stroke="#f59e0b" stroke-width="4" stroke-linecap="round"/>
+<polygon points="370.0,245.0 350.0,255.0 350.0,235.0" fill="#f59e0b"/>
+<text x="310.0" y="231.0" text-anchor="middle" class="small" transform="rotate(0.0 310.0 231.0)" dominant-baseline="middle">exhaustion</text>
+<line x1="580" y1="245" x2="700" y2="245" stroke="#ef4444" stroke-width="4" stroke-linecap="round"/>
+<polygon points="700.0,245.0 680.0,255.0 680.0,235.0" fill="#ef4444"/>
+<text x="640.0" y="231.0" text-anchor="middle" class="small" transform="rotate(0.0 640.0 231.0)" dominant-baseline="middle">critical-path loss</text>
+<line x1="910" y1="245" x2="1030" y2="245" stroke="#a78bfa" stroke-width="4" stroke-linecap="round"/>
+<polygon points="1030.0,245.0 1010.0,255.0 1010.0,235.0" fill="#a78bfa"/>
+<text x="970.0" y="231.0" text-anchor="middle" class="small" transform="rotate(0.0 970.0 231.0)" dominant-baseline="middle">try_reboot()</text>
+<text x="60" y="430" class="body">Typical triggers:</text>
+<text x="60" y="460" class="body">NOMINAL to DEGRADED: repeated restart failures or configured exhaustion action.</text>
+<text x="60" y="490" class="body">DEGRADED to SAFE: critical subsystems become unavailable beyond threshold.</text>
+<text x="60" y="520" class="body">Any mode to REBOOT_PENDING: explicit reboot request through policy or application.</text>
+</svg>

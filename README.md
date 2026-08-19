@@ -31,13 +31,17 @@ The following properties are addressed by the design:
 
 `fdir` is developed with safety- and mission-critical engineering practices in mind. The design addresses engineering concerns commonly encountered in dependable embedded and space software.
 
-The project does not claim compliance or certification against any standard such as ECSS-E-ST-40C, ECSS-Q-ST-80C, or IEC 61508. Compliance is a property of the complete system, development process, configuration, and evidence -- not of this library in isolation. The integrating project is responsible for determining which standards apply and for producing the required assurance evidence.
+The project does not claim compliance or certification against any standard such as ECSS-E-ST-40C, ECSS-Q-ST-80C, or IEC 61508.
 
 Whether these properties contribute to compliance with a particular standard depends on the applicable requirements, project tailoring, implementation, and verification evidence.
 
 The project may be used as a software component within systems developed under standards such as ECSS-E-ST-40C, ECSS-Q-ST-80C, or IEC 61508, but using it does not by itself constitute compliance with those standards.
 
 ## Concepts
+
+![FDIR overview](docs/assets/fdir-overview.svg)
+
+![Failure handling flow](docs/assets/fdir-recovery-flow.svg)
 
 **Entity:** a task, thread, or software component registered with the framework. Each entity has a restart budget and a watchdog heartbeat. When a fault is reported fdir selects a recovery action (restart, degrade, safe mode, reboot) based on the entity's descriptor and the current system state.
 
@@ -51,6 +55,8 @@ The project may be used as a software component within systems developed under s
 | DEGRADED | 1 | At least one entity exhausted its restart budget |
 | SAFE | 2 | Too many critical subsystems unavailable |
 | REBOOT_PENDING | 3 | Reboot has been requested |
+
+![Mode escalation](docs/assets/fdir-modes.svg)
 
 ## Building
 
