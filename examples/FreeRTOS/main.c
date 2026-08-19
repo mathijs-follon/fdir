@@ -2,9 +2,9 @@
  * FreeRTOS + fdir demo (POSIX/Linux host build)
  *
  * Three scenarios run sequentially:
- *   1. Watchdog miss   - worker stops heartbeating, supervisor detects and restarts
- *   2. Budget exhaust  - worker faults 3 times, budget exhausted, mode -> DEGRADED
- *   3. Dual-path fail  - two critical subsystems marked unavailable, mode -> SAFE
+ *   1. Watchdog miss:   worker stops heartbeating, supervisor detects and restarts
+ *   2. Budget exhaust:  worker faults 3 times, budget exhausted, mode -> DEGRADED
+ *   3. Dual-path fail:  two critical subsystems marked unavailable, mode -> SAFE
  *
  * Build: make freertos
  * Run:   ./build/example_FreeRTOS
@@ -13,16 +13,16 @@
 #include "fdir.h"
 
 #include "FreeRTOS.h"
-#include "queue.h"
+#include "port.h"
 #include "task.h"
 #include "timers.h"
 
 #include <stdio.h>
 #include <string.h>
 
-QueueHandle_t g_failure_queue;
+fdir_port_t fdir_app_port(void);
 
-static fdir_entity_id_t    g_worker_id   = FDIR_ENTITY_NONE;
+static fdir_entity_id_t    g_worker_id    = FDIR_ENTITY_NONE;
 static TaskHandle_t        g_worker_task;
 static fdir_subsystem_id_t g_sub_downlink = FDIR_SUBSYSTEM_NONE;
 static fdir_subsystem_id_t g_sub_storage  = FDIR_SUBSYSTEM_NONE;
@@ -37,7 +37,6 @@ static int worker_restart(fdir_entity_id_t id, void *user)
     printf("[demo] restarting worker\n");
     g_stop_heartbeat = 0;
     g_inject_fault   = 0;
-    vTaskResume(g_worker_task);
     return 0;
 }
 
@@ -46,20 +45,18 @@ static void worker_task(void *param)
     (void)param;
 
     for (;;) {
+        if (!fdir_worker_may_run(g_worker_id)) {
+            vTaskDelay(pdMS_TO_TICKS(500));
+            continue;
+        }
+
         if (!g_stop_heartbeat) {
             fdir_health_heartbeat_notify(g_worker_id);
         }
 
         if (g_inject_fault) {
             g_inject_fault = 0;
-            fdir_failure_report_t r;
-            memset(&r, 0, sizeof(r));
-            r.entity      = g_worker_id;
-            r.reason      = FDIR_REASON_IO_ERROR;
-            r.error_code  = 42;
-            r.timestamp_ms = fdir_get_now_ms();
-            strncpy(r.detail, "simulated I/O error", FDIR_DETAIL_SIZE - 1);
-            fdir_submit_failure(&r);
+            fdir_report_fault(g_worker_id, FDIR_REASON_IO_ERROR, 42, "simulated I/O error");
         }
 
         vTaskDelay(pdMS_TO_TICKS(300));
@@ -71,11 +68,7 @@ static void supervisor_task(void *param)
     (void)param;
 
     for (;;) {
-        fdir_failure_report_t report;
-        while (xQueueReceive(g_failure_queue, &report, 0) == pdTRUE) {
-            fdir_handle_failure(&report);
-        }
-        fdir_check_watchdogs();
+        fdir_supervisor_tick();
         vTaskDelay(pdMS_TO_TICKS(500));
     }
 }
@@ -84,14 +77,12 @@ static void scenario_task(void *param)
 {
     (void)param;
 
-    /* scenario 1: watchdog miss */
     printf("\n--- Scenario 1: watchdog miss -> restart ---\n");
     vTaskDelay(pdMS_TO_TICKS(400));
     g_stop_heartbeat = 1;
     printf("[demo] worker stopped heartbeating\n");
     vTaskDelay(pdMS_TO_TICKS(3000));
 
-    /* scenario 2: fault budget exhaustion */
     printf("\n--- Scenario 2: 3 faults -> DEGRADED ---\n");
     for (int i = 0; i < 3; i++) {
         g_inject_fault = 1;
@@ -100,18 +91,10 @@ static void scenario_task(void *param)
     }
     vTaskDelay(pdMS_TO_TICKS(1000));
 
-    /* scenario 3: dual critical-path subsystems unavailable */
     printf("\n--- Scenario 3: dual-path unavailable -> SAFE ---\n");
     fdir_subsystem_mark_unavailable(g_sub_downlink);
     fdir_subsystem_mark_unavailable(g_sub_storage);
-
-    fdir_failure_report_t r;
-    memset(&r, 0, sizeof(r));
-    r.entity        = g_worker_id;
-    r.reason       = FDIR_REASON_USER;
-    r.timestamp_ms = fdir_get_now_ms();
-    strncpy(r.detail, "dual-path forced", FDIR_DETAIL_SIZE - 1);
-    fdir_submit_failure(&r);
+    fdir_report_fault(g_worker_id, FDIR_REASON_USER, 0, "dual-path forced");
 
     vTaskDelay(pdMS_TO_TICKS(1500));
 
@@ -127,9 +110,13 @@ int main(void)
     cfg.missed_heartbeat_tolerance = 2;
     cfg.safe_mode_critical_failure_threshold = 2;
 
-    if (fdir_init(&cfg) != FDIR_OK) {
-        printf("fdir_init failed\n");
-        return 1;
+    fdir_port_t port = fdir_app_port(); // From port.c
+    fdir_status_t init_status = fdir_init(&cfg, &port);
+    if (init_status != FDIR_OK) {
+        fdir_request_reboot("fdir_init failed\n");
+        for (;;) {
+            vTaskDelay(pdMS_TO_TICKS(1000));
+        }
     }
 
     fdir_subsystem_desc_t sub_dl = { .name = "downlink", .is_critical_path = 1 };
@@ -149,22 +136,6 @@ int main(void)
     if (fdir_entity_register(&desc, &g_worker_id) != FDIR_OK) {
         printf("fdir_entity_register failed\n");
         return 1;
-    }
-
-    g_failure_queue = xQueueCreate(8, sizeof(fdir_failure_report_t));
-
-    /* Startup self-test before the scheduler runs. Report a fault immediately
-     * on failure; fdir applies normal restart/degrade logic when the supervisor
-     * task drains the queue after vTaskStartScheduler(). */
-    const int worker_ok = 1;
-    if (!worker_ok) {
-        fdir_failure_report_t r;
-        memset(&r, 0, sizeof(r));
-        r.entity       = g_worker_id;
-        r.reason       = FDIR_REASON_IO_ERROR;
-        r.timestamp_ms = 0;
-        strncpy(r.detail, "startup self-test failed", FDIR_DETAIL_SIZE - 1);
-        xQueueSend(g_failure_queue, &r, 0);
     }
 
     fdir_health_heartbeat_notify(g_worker_id);

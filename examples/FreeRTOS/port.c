@@ -1,35 +1,19 @@
 /*
- * Strong overrides for the fdir weak port hooks, wired to FreeRTOS primitives.
+ * Platform port hooks wired to FreeRTOS primitives.
  */
 #include "fdir.h"
 
 #include "FreeRTOS.h"
-#include "queue.h"
 #include "task.h"
 
 #include <stdio.h>
 
-extern QueueHandle_t g_failure_queue;
-
-uint32_t fdir_get_now_ms(void)
+static uint32_t port_now(void)
 {
     return (uint32_t)(xTaskGetTickCount() * portTICK_PERIOD_MS);
 }
 
-int fdir_submit_failure(const fdir_failure_report_t *report)
-{
-    if (xQueueSend(g_failure_queue, report, 0) == pdTRUE) {
-        return 0;
-    }
-    return -1;
-}
-
-void fdir_isolate_current_worker(void)
-{
-    vTaskSuspend(NULL);
-}
-
-void fdir_emit_event(const fdir_event_t *event)
+static void port_emit(const fdir_event_t *event)
 {
     static const char *const kind_names[] = {
         "FAILURE", "MODE_CHANGE", "RESTART", "WATCHDOG", "NOTE", "QUEUE_OVF",
@@ -40,10 +24,20 @@ void fdir_emit_event(const fdir_event_t *event)
            (unsigned)event->reason, event->detail);
 }
 
-void fdir_request_reboot(const char *reason)
+static void port_reboot(const char *reason)
 {
     printf("[fdir] REBOOT requested: %s\n", reason != NULL ? reason : "(null)");
     vTaskEndScheduler();
+}
+
+fdir_port_t fdir_app_port(void)
+{
+    fdir_port_t port = {
+        .get_now_ms     = port_now,
+        .emit_event     = port_emit,
+        .request_reboot = port_reboot,
+    };
+    return port;
 }
 
 void vAssertCalled(const char *file, unsigned long line)

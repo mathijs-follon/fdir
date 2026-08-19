@@ -7,23 +7,23 @@
 extern "C" {
 #endif
 
-/*
- * Weak port hooks (__attribute__((weak)) in src/port.c). Provide strong
- * definitions in the integrating firmware to override the defaults.
- * Required (default abort()): fdir_get_now_ms, fdir_submit_failure,
- * fdir_isolate_current_worker.
- * Optional (default no-op): fdir_emit_event, fdir_request_reboot.
- * C++ users can skip these; the wrapper supplies a different interface.
+/**
+ * Platform integration hooks. Pass to fdir_init().
+ *
+ * All three callbacks are required (non-NULL); otherwise fdir_init() returns FDIR_ERR_PORT.
+ * lock/unlock are optional: when set, the library serialises internal state
+ * (including the internal failure queue) for multi-threaded use.
  */
+typedef struct {
+    uint32_t (*get_now_ms)(void);
+    void (*emit_event)(const fdir_event_t *event);
+    void (*request_reboot)(const char *reason);
+    void (*lock)(void);
+    void (*unlock)(void);
+} fdir_port_t;
 
 uint32_t fdir_get_now_ms(void);
-
-int fdir_submit_failure(const fdir_failure_report_t *report);
-
-void fdir_isolate_current_worker(void);
-
 void fdir_emit_event(const fdir_event_t *event);
-
 void fdir_request_reboot(const char *reason);
 
 #ifdef __cplusplus

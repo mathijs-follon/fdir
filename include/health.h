@@ -10,11 +10,15 @@ void fdir_health_heartbeat_notify(fdir_entity_id_t id);
 
 void fdir_health_set(fdir_entity_id_t id, fdir_health_t health, uint16_t error_code, const char *detail);
 
+/** Clear error state and mark OK. Does not clear fault latch or restart budgets. */
 void fdir_health_reset(fdir_entity_id_t id);
 
 const fdir_health_snapshot_t *fdir_health_snapshot(fdir_entity_id_t id);
 
 fdir_bool_t fdir_health_is_stale(fdir_entity_id_t id, uint32_t now_ms, uint32_t max_age_ms);
+
+/** Non-zero when entity+reason is latched after supervisor handling (query only). */
+fdir_bool_t fdir_health_fault_is_latched(fdir_entity_id_t id, fdir_reason_t reason);
 
 #ifdef __cplusplus
 }

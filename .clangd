@@ -1,0 +1,30 @@
+CompileFlags:
+  Add:
+    - -std=c11
+    - -Iinclude
+    - -Isrc
+
+---
+If:
+  PathMatch: tests/.*\.c
+CompileFlags:
+  Add:
+    - -Itests
+
+---
+If:
+  PathMatch: examples/filecopy/.*\.c
+CompileFlags:
+  Add:
+    - -Iexamples/filecopy
+    - -D_GNU_SOURCE
+
+---
+If:
+  PathMatch: examples/FreeRTOS/.*\.c
+CompileFlags:
+  Add:
+    - -Iexamples/FreeRTOS
+    - -Iexamples/FreeRTOS/FreeRTOS-Kernel/include
+    - -Iexamples/FreeRTOS/FreeRTOS-Kernel/portable/ThirdParty/GCC/Posix
+    - -D_GNU_SOURCE

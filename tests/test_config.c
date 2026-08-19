@@ -4,7 +4,6 @@
 
 TEST(test_config)
 {
-    // Sanity check to test the test_harness
     fdir_config_t config = fdir_config_default();
 
     ASSERT_EQ_INT(config.health_check_period_ms, 500U);

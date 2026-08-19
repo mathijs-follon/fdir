@@ -1,6 +1,24 @@
-# FDIR: Fault Detection, Isolation & Recovery
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/assets/logo-light.png">
+    <img alt="fdir" src="docs/assets/logo-dark.png" width="440">
+  </picture>
+</p>
 
-[![Compile and Test](https://github.com/mathijs-follon/fdir/actions/workflows/compile-and-test.yml/badge.svg)](https://github.com/mathijs-follon/fdir/actions/workflows/compile-and-test.yml)
+<p align="center">
+  <b>FDIR: Fault Detection, Isolation & Recovery library</b>
+</p>
+
+<p align="center">
+  <a href="https://github.com/mathijs-follon/fdir/releases/latest"><img alt="release" src="https://img.shields.io/github/v/release/mathijs-follon/fdir?color=2a78d6"></a>
+  <a href="https://github.com/mathijs-follon/fdir/actions/workflows/compile-and-test.yml"><img alt="ci" src="https://github.com/mathijs-follon/fdir/actions/workflows/compile-and-test.yml/badge.svg"></a>
+  <img alt="C11" src="https://img.shields.io/badge/C11-portable-2a78d6">
+  <img alt="MIT" src="https://img.shields.io/badge/license-MIT-1baf7a">
+  <img alt="zero allocation" src="https://img.shields.io/badge/core-zero%20alloc-1baf7a">
+  <img alt="no OS dependency" src="https://img.shields.io/badge/OS-none%20required-1baf7a">
+  <img alt="examples" src="https://img.shields.io/badge/examples-4%20%C2%B7%20C-eb6834">
+</p>
+
 
 > Looking for the API? [click here](docs/api.md) 
 
@@ -10,7 +28,7 @@ FDIR is a fault-management pattern used in spacecraft, aviation, and safety-crit
 
 The library is inspired by FDIR modules written for CubeSat RTOS projects at university. Reimplementing the same patterns from scratch for each project is impractical, so the common parts were extracted into this reusable library.
 
-The core library uses no dynamic allocation and has no operating-system dependency. Platform-specific behaviour is provided through a small set of port hooks. A C++20/23 header-only interface is also provided.
+The core library uses no dynamic allocation and has no operating-system dependency. Platform-specific behaviour is provided through a small set of port hooks.
 
 ## Design
 
@@ -36,6 +54,8 @@ The following properties are addressed by the design:
 The project does not claim compliance or certification against any standard such as ECSS-E-ST-40C, ECSS-Q-ST-80C, or IEC 61508.
 
 Whether these properties contribute to compliance with a particular standard depends on the applicable requirements, project tailoring, implementation, and verification evidence.
+
+Integrators should read [docs/integration.md](docs/integration.md) (recommended wiring), [docs/safety/seooC.md](docs/safety/seooC.md) (assumptions and limits), and [docs/threading.md](docs/threading.md) (concurrency contract).
 
 The project may be used as a software component within systems developed under standards such as ECSS-E-ST-40C, ECSS-Q-ST-80C, or IEC 61508, but using it does not by itself constitute compliance with those standards.
 
@@ -68,33 +88,41 @@ The project may be used as a software component within systems developed under s
 ```
 make          # build libfdir.a and compile_commands.json
 make test     # build and run all tests
-make examples # build all six example binaries
+make examples # build all four example binaries
 make clean
 ```
 
 ## Examples
 
-Each example has a `c/` and a `cxx/` subdirectory. The C variants use strong overrides of the weak port-hook symbols. The C++ variants supply port hooks as a `fdir::Port` struct of lambdas passed to `fdir::Supervisor::create()`.
+Each example lives under `examples/<name>/` and registers a `fdir_port_t` at `fdir_init()`.
 
 ### getting_started
 
 Minimal example with no RTOS and no threads. Covers fault/restart, budget exhaustion, and watchdog detection.
 
 ```
-make getting_started        # c/
-make getting_started_cxx    # cxx/
+make getting_started
+./build/getting_started
 ```
+
+### dual_path
+
+Satellite-style dual critical-path example with per-entity `decide()` policy. Covers link-loss degrade-only, init-fail unavailable, and SAFE escalation.
+
+```
+make dual_path
+./build/dual_path
+```
+
+See [docs/integration.md](docs/integration.md) for the full integration guide.
 
 ### filecopy
 
 Parallel directory copy CLI. Worker threads share a bounded job queue and heartbeat fdir after each file. Demonstrates multi-entity registration and fault-driven restart/degrade on I/O errors.
 
 ```
-make filecopy               # c/
+make filecopy
 ./build/fcopy <src> <dst> [--workers N]
-
-make filecopy_cxx           # cxx/
-./build/fcopy_cxx <src> <dst> [--workers N]
 ```
 
 ### FreeRTOS
@@ -104,24 +132,28 @@ FreeRTOS integration on the POSIX/Linux simulator. Three tasks (worker, supervis
 ```
 git submodule update --init examples/FreeRTOS/FreeRTOS-Kernel
 
-make freertos               # c/
+make freertos
 ./build/example_FreeRTOS
-
-make freertos_cxx           # cxx/ (kernel compiled as C, application as C++)
-./build/example_FreeRTOS_cxx
 ```
 
 ## Questions and support
 
 If you have questions about integrating the library, run into unexpected behaviour, or want to discuss how to apply it to your system, open an issue on GitHub. I am happy to help.
 
+## Changelog
+
+Release notes: [docs/changenotes/v1.0.0.md](docs/changenotes/v1.0.0.md)
+
+| Version | Notes |
+|---------|-------|
+| [v1.0.0](docs/changenotes/v1.0.0.md) | First stable C-only API; explicit port, internal failure queue, cooperative workers |
+| [v0.2.0](docs/changenotes/v0.2.0.md) | `fdir_post_failure` renamed to `fdir_submit_failure` |
+| [v0.1.0](docs/changenotes/v0.1.0.md) | Initial release |
+
 ## API reference
 
-Full API reference including integration examples, port hook documentation, and C++ types: [docs/api.md](docs/api.md).
+Full API reference including integration examples and port hook documentation: [docs/api.md](docs/api.md).
 
 ## AI usage
 
-AI assistants were used to help write documentation and produce the static SVG figures in `docs/assets/`. The library source, tests, and examples were written and reviewed by me. AI was not used to generate the implementation wholesale, but it did help substantially with debugging and with shaping the examples, the `Makefile`, and the overall project structure. The library itself was developed by abstracting and generalizing patterns from existing code and prior work.
-
-
-
+AI assistants were used to help write documentation and produce the static SVG figures and the logo images in `docs/assets/`. The library source, tests, and examples were written and reviewed by me. AI was not used to generate the implementation wholesale, but it did help substantially with debugging and with shaping the examples, the `Makefile`, and the overall project structure. The library abstracts fault-handling patterns common in embedded and space software.

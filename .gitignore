@@ -1,6 +1,6 @@
 build/
 compile_commands.json
 .cache
-
-# Local scripts, notes, and tooling. Not part of the public repo.
-local/
+*.gcov
+scripts/
+.venv

@@ -106,23 +106,20 @@ static void *worker_thread(void *arg)
     worker_ctx_t *ctx = arg;
     copy_job_t job;
 
-    while (job_queue_pop(ctx->queue, &job)) {
-        int rc = copy_file(job.src, job.dst);
+    for (;;) {
+        if (!fdir_worker_may_run(ctx->entity)) {
+            usleep(200000);
+            continue;
+        }
 
-        if (rc != 0) {
-            fdir_failure_report_t report;
-            memset(&report, 0, sizeof(report));
-            report.entity      = ctx->entity;
-            report.reason      = FDIR_REASON_IO_ERROR;
-            report.error_code  = (uint16_t)errno;
-            report.timestamp_ms = fdir_get_now_ms();
-            snprintf(report.detail, FDIR_DETAIL_SIZE, "%.28s", job.src);
-            fdir_submit_failure(&report);
-            /*
-             * fdir_isolate_current_worker() may be called from the supervisor
-             * via the restart/isolate path, which calls pthread_exit on this
-             * thread. We continue the loop; fdir handles escalation.
-             */
+        if (!job_queue_pop(ctx->queue, &job)) {
+            break;
+        }
+
+        if (copy_file(job.src, job.dst) != 0) {
+            fdir_report_fault(ctx->entity, FDIR_REASON_IO_ERROR,
+                              (uint16_t)errno, job.src);
+            break;
         }
 
         fdir_health_heartbeat_notify(ctx->entity);
@@ -141,7 +138,7 @@ int worker_start(worker_ctx_t *ctx)
 void worker_wait_all(worker_ctx_t *workers, int n)
 {
     for (int i = 0; i < n; i++) {
-        if (workers[i].active || workers[i].thread) {
+        if (workers[i].active) {
             pthread_join(workers[i].thread, NULL);
         }
     }

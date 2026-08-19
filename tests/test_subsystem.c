@@ -1,11 +1,12 @@
 #include "test_harness.h"
+#include "test_port.h"
 
 #include "fdir.h"
 
 static void setup(void)
 {
     fdir_config_t cfg = fdir_config_default();
-    (void)fdir_init(&cfg);
+    (void)test_fdir_init(&cfg);
 }
 
 TEST(test_register_subsystem_assigns_id_and_name)

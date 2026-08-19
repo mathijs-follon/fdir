@@ -20,8 +20,5 @@ jobs:
       - name: Test library
         run: make test
 
-      - name: Build examples (C)
-        run: make getting_started filecopy freertos
-
-      - name: Build examples (C++)
-        run: make getting_started_cxx filecopy_cxx freertos_cxx
+      - name: Build examples
+        run: make examples

@@ -1,5 +1,5 @@
 /*
- * fcopy - parallel directory copy with fdir-based fault recovery
+ * fcopy: parallel directory copy with fdir-based fault recovery
  *
  * Usage: fcopy <src> <dst> [--workers N]
  *
@@ -20,8 +20,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-void fport_queue_init(void);
-int  fport_queue_pop(fdir_failure_report_t *out);
+fdir_port_t fdir_app_port(void);
 
 
 static job_queue_t  g_queue;
@@ -38,7 +37,7 @@ static int worker_restart_cb(fdir_entity_id_t id, void *user)
     worker_ctx_t *ctx = user;
     (void)id;
     fprintf(stderr, "[fcopy] restarting worker %d\n", ctx->index);
-    /* join the old thread (it has exited via fdir_isolate_current_worker) */
+    /* join the old thread (it stopped after fdir_worker_may_run returned false) */
     pthread_join(ctx->thread, NULL);
     return worker_start(ctx);
 }
@@ -74,11 +73,7 @@ static void *supervisor_thread(void *arg)
     const struct timespec interval = { .tv_sec = 0, .tv_nsec = 200 * 1000 * 1000 };
 
     while (g_running) {
-        fdir_failure_report_t report;
-        while (fport_queue_pop(&report)) {
-            fdir_handle_failure(&report);
-        }
-        fdir_check_watchdogs();
+        fdir_supervisor_tick();
 
         if (fdir_system_mode() >= FDIR_MODE_SAFE) {
             fprintf(stderr, "[fcopy] system entered SAFE mode, aborting\n");
@@ -145,7 +140,6 @@ int main(int argc, char **argv)
         return 1;
     }
 
-    fport_queue_init();
     job_queue_init(&g_queue);
 
     fdir_config_t cfg = fdir_config_default();
@@ -153,7 +147,9 @@ int main(int argc, char **argv)
     cfg.missed_heartbeat_tolerance        = 3;
     cfg.safe_mode_critical_failure_threshold = (uint8_t)(g_nworkers);
 
-    if (fdir_init(&cfg) != FDIR_OK) {
+    fdir_port_t port = fdir_app_port();
+    fdir_status_t init_status = fdir_init(&cfg, &port);
+    if (init_status != FDIR_OK) {
         fprintf(stderr, "fcopy: fdir_init failed\n");
         return 1;
     }
@@ -175,20 +171,6 @@ int main(int argc, char **argv)
         if (fdir_entity_register(&desc, &g_workers[i].entity) != FDIR_OK) {
             fprintf(stderr, "fcopy: fdir_entity_register failed for worker %d\n", i);
             return 1;
-        }
-
-        /* Startup self-test: verify the worker can access its I/O path before
-         * accepting jobs. Report a fault immediately on failure so fdir can
-         * apply normal restart/degrade logic before the copy run begins. */
-        const int worker_ok = 1;
-        if (!worker_ok) {
-            fdir_failure_report_t r;
-            memset(&r, 0, sizeof(r));
-            r.entity       = g_workers[i].entity;
-            r.reason       = FDIR_REASON_IO_ERROR;
-            r.timestamp_ms = fdir_get_now_ms();
-            strncpy(r.detail, "startup self-test failed", FDIR_DETAIL_SIZE - 1);
-            fdir_submit_failure(&r);
         }
 
         fdir_health_heartbeat_notify(g_workers[i].entity);

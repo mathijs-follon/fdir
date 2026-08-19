@@ -1,12 +1,14 @@
 #include "subsystem.h"
+#include "subsystem_internal.h"
 #include "internal.h"
 #include <string.h>
 
 typedef struct {
     fdir_subsystem_desc_t desc;
-    uint8_t available;
-    uint8_t degraded;
-    uint8_t used;
+    char                  name[FDIR_NAME_SIZE];
+    uint8_t               available;
+    uint8_t               degraded;
+    uint8_t               used;
 } fdir_subsystem_slot_t;
 
 static fdir_subsystem_slot_t g_subs[FDIR_SUBSYSTEM_CAP];
@@ -43,19 +45,30 @@ fdir_status_t fdir_subsystem_register(const fdir_subsystem_desc_t *desc, fdir_su
 {
     fdir_subsystem_id_t id;
 
+    fdir_port_sync_enter();
+
     if (desc == NULL || out_id == NULL) {
+        fdir_port_sync_exit();
         return FDIR_ERR_PARAM;
     }
     if (g_sub_count >= FDIR_SUBSYSTEM_CAP) {
+        fdir_port_sync_exit();
         return FDIR_ERR_FULL;
     }
 
     id = g_sub_count++;
-    g_subs[id].desc = *desc;
+    g_subs[id].desc = (fdir_subsystem_desc_t){0};
+    fdir_internal_copy_detail(g_subs[id].name, sizeof(g_subs[id].name), desc->name);
+    g_subs[id].desc.name = g_subs[id].name;
+    g_subs[id].desc.is_critical_path = desc->is_critical_path;
+    g_subs[id].desc.on_entity_exhausted = desc->on_entity_exhausted;
+    g_subs[id].desc.user = desc->user;
     g_subs[id].used = 1U;
     g_subs[id].available = 1U;
     g_subs[id].degraded = 0U;
     *out_id = id;
+
+    fdir_port_sync_exit();
     return FDIR_OK;
 }
 
@@ -93,34 +106,75 @@ fdir_bool_t fdir_subsystem_is_critical_path(fdir_subsystem_id_t id)
     return (slot != NULL && slot->desc.is_critical_path) ? 1U : 0U;
 }
 
-void fdir_subsystem_mark_available(fdir_subsystem_id_t id)
+void fdir_subsystem_mark_available_unsafe(fdir_subsystem_id_t id)
 {
     fdir_subsystem_slot_t *slot = slot_of(id);
 
-    if (slot == NULL) {
-        return;
+    if (slot != NULL) {
+        slot->available = 1U;
+        slot->degraded = 0U;
     }
-    slot->available = 1U;
-    slot->degraded = 0U;
+}
+
+void fdir_subsystem_mark_unavailable_unsafe(fdir_subsystem_id_t id)
+{
+    fdir_subsystem_slot_t *slot = slot_of(id);
+
+    if (slot != NULL) {
+        slot->available = 0U;
+        slot->degraded = 1U;
+    }
+}
+
+void fdir_subsystem_mark_degraded_unsafe(fdir_subsystem_id_t id)
+{
+    fdir_subsystem_slot_t *slot = slot_of(id);
+
+    if (slot != NULL) {
+        slot->degraded = 1U;
+    }
+}
+
+void fdir_subsystem_mark_available(fdir_subsystem_id_t id)
+{
+    fdir_port_sync_enter();
+    if (slot_of(id) != NULL) {
+        fdir_subsystem_mark_available_unsafe(id);
+        fdir_internal_emit_subsystem_state(id, FDIR_ENTITY_NONE, FDIR_REASON_USER, 0U,
+                                           FDIR_ANOMALY_CLEARED, "available");
+    }
+    fdir_port_sync_exit();
 }
 
 void fdir_subsystem_mark_unavailable(fdir_subsystem_id_t id)
 {
-    fdir_subsystem_slot_t *slot = slot_of(id);
-
-    if (slot == NULL) {
-        return;
+    fdir_port_sync_enter();
+    if (slot_of(id) != NULL) {
+        fdir_subsystem_mark_unavailable_unsafe(id);
+        fdir_internal_emit_subsystem_state(id, FDIR_ENTITY_NONE, FDIR_REASON_USER, 0U,
+                                           FDIR_ANOMALY_RAISED, "unavailable");
     }
-    slot->available = 0U;
-    slot->degraded = 1U;
+    fdir_port_sync_exit();
 }
 
 void fdir_subsystem_mark_degraded(fdir_subsystem_id_t id)
 {
-    fdir_subsystem_slot_t *slot = slot_of(id);
-
-    if (slot == NULL) {
-        return;
+    fdir_port_sync_enter();
+    if (slot_of(id) != NULL) {
+        fdir_subsystem_mark_degraded_unsafe(id);
+        fdir_internal_emit_subsystem_state(id, FDIR_ENTITY_NONE, FDIR_REASON_USER, 0U,
+                                           FDIR_ANOMALY_RAISED, "degraded");
     }
-    slot->degraded = 1U;
+    fdir_port_sync_exit();
+}
+
+fdir_action_t fdir_subsystem_on_entity_exhausted(fdir_subsystem_id_t sub, fdir_entity_id_t entity,
+                                                 const fdir_failure_report_t *report)
+{
+    const fdir_subsystem_slot_t *slot = slot_of(sub);
+
+    if (slot == NULL || slot->desc.on_entity_exhausted == NULL) {
+        return FDIR_ACTION_NONE;
+    }
+    return slot->desc.on_entity_exhausted(sub, entity, report, slot->desc.user);
 }

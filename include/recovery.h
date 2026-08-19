@@ -1,6 +1,7 @@
 #ifndef FDIR_RECOVERY_H
 #define FDIR_RECOVERY_H
 
+#include "port.h"
 #include "types.h"
 #ifdef __cplusplus
 extern "C" {
@@ -11,12 +12,12 @@ extern "C" {
  * Application supplies restart and optional decide() policy.
  */
 typedef struct {
-    const char *name;
+    const char *name; /**< Copied at registration; need not outlive fdir_entity_register(). */
 
-    /** Max non-watchdog restarts. */
+    /** Max non-watchdog restarts (0 = none). Use FDIR_RESTART_UNLIMITED for no cap. */
     uint8_t max_restarts;
 
-    /** Max watchdog-triggered restarts. */
+    /** Max watchdog-triggered restarts. Use FDIR_RESTART_UNLIMITED for no cap. */
     uint8_t max_watchdog_restarts;
 
     /**
@@ -56,11 +57,10 @@ fdir_config_t fdir_config_default(void);
 
 /**
  * Initialise FDIR. Copies config (NULL uses fdir_config_default()).
- * Override the required weak port hooks in port.h before calling
- * (fdir_get_now_ms, fdir_submit_failure, fdir_isolate_current_worker);
- * the defaults abort().
+ * port must be non-NULL with every required fdir_port_t callback set; otherwise
+ * returns FDIR_ERR_PORT.
  */
-fdir_status_t fdir_init(const fdir_config_t *config);
+fdir_status_t fdir_init(const fdir_config_t *config, const fdir_port_t *port);
 
 fdir_status_t fdir_entity_register(const fdir_entity_desc_t *desc, fdir_entity_id_t *out_id);
 
@@ -70,14 +70,37 @@ const char *fdir_entity_name(fdir_entity_id_t id);
 
 fdir_mode_t fdir_system_mode(void);
 
+/**
+ * Non-zero when an entity worker may take work. Prefer fdir_worker_may_run() in
+ * worker loops (SAFE-mode heartbeat); this function has no side effects.
+ */
+fdir_bool_t fdir_entity_may_run(fdir_entity_id_t id);
+
 /** Pointer to the copied config. Valid after fdir_init(). */
 const fdir_config_t *fdir_config(void);
 
 uint32_t fdir_heartbeat_max_age_ms(void);
 
 /**
- * Supervisor entry: handle one failure report (log + recover).
- * Call after draining the application failure queue / mailbox.
+ * Enable or disable FDIR supervision (ground bypass / inhibit).
+ * When disabled (enabled == 0): workers are not gated, faults are not queued,
+ * supervisor tick and watchdog scan are no-ops; pending queue entries are cleared.
+ * Returns the previous enabled state. Emits a NOTE event on change.
+ */
+fdir_bool_t fdir_set_supervision_enabled(fdir_bool_t enabled);
+
+/** Non-zero when supervision is active (default after fdir_init). */
+fdir_bool_t fdir_supervision_enabled(void);
+
+/**
+ * Supervisor entry: drain the internal failure queue and run watchdog scan.
+ * Call periodically from the supervisor / mode-monitor task.
+ */
+void fdir_supervisor_tick(void);
+
+/**
+ * Handle one failure report (log + recover). Normally invoked by
+ * fdir_supervisor_tick(); call directly only for watchdog-style inline recovery.
  */
 void fdir_handle_failure(const fdir_failure_report_t *report);
 
@@ -95,8 +118,24 @@ void fdir_enter_degraded_mode(void);
 void fdir_enter_safe_mode(void);
 
 /**
+ * Re-run dual-path / critical-subsystem escalation after manual subsystem marks.
+ * Call when ground or application code marks subsystems without going through
+ * fdir_handle_failure().
+ */
+void fdir_reassess_system_mode(void);
+
+/**
+ * Ground-driven mode set (NOMINAL, DEGRADED, or SAFE). Emits MODE_CHANGE.
+ * REBOOT_PENDING is only entered via fdir_try_reboot().
+ */
+fdir_status_t fdir_set_system_mode(fdir_mode_t mode);
+
+/** Ground-driven one-step de-escalation: SAFE->DEGRADED->NOMINAL. */
+fdir_status_t fdir_deescalate_system_mode(void);
+
+/**
  * Enter REBOOT_PENDING, emit a mode-change event, then call
- * fdir_request_reboot() (weak port hook; default is a no-op).
+ * fdir_request_reboot() on the registered port.
  */
 void fdir_try_reboot(const char *reason);
 

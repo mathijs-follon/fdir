@@ -7,5 +7,6 @@
 #include "report.h"
 #include "subsystem.h"
 #include "types.h"
+#include "worker.h"
 
 #endif /* FDIR_H */

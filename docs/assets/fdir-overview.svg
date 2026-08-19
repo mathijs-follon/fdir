@@ -18,8 +18,8 @@ text { font-family: Inter, Segoe UI, Arial, sans-serif; }
 <text x="60" y="262" class="body">report faults on failure</text>
 <rect x="370" y="160" rx="18" ry="18" width="210" height="170" fill="#111827" stroke="#334155" stroke-width="2"/>
 <text x="390" y="192" class="box-title">Failure Queue</text>
-<text x="390" y="222" class="body">port hook or lambda</text>
-<text x="390" y="242" class="body">bounded transport</text>
+<text x="390" y="222" class="body">internal library queue</text>
+<text x="390" y="242" class="body">bounded ring buffer</text>
 <text x="390" y="262" class="body">decouples producers</text>
 <text x="390" y="282" class="body">from supervisor</text>
 <rect x="700" y="160" rx="18" ry="18" width="210" height="170" fill="#111827" stroke="#334155" stroke-width="2"/>
@@ -40,10 +40,10 @@ text { font-family: Inter, Segoe UI, Arial, sans-serif; }
 <text x="60" y="532" class="body">count critical-path outages</text>
 <rect x="625" y="430" rx="18" ry="18" width="360" height="170" fill="#111827" stroke="#334155" stroke-width="2"/>
 <text x="645" y="462" class="box-title">Port Integration</text>
-<text x="645" y="492" class="body">time source</text>
-<text x="645" y="512" class="body">failure submission</text>
-<text x="645" y="532" class="body">current-worker isolation</text>
-<text x="645" y="552" class="body">optional event logging and reboot</text>
+<text x="645" y="492" class="body">get_now_ms</text>
+<text x="645" y="512" class="body">emit_event</text>
+<text x="645" y="532" class="body">request_reboot</text>
+<text x="645" y="552" class="body">optional lock / unlock</text>
 <line x1="250" y1="245" x2="370" y2="245" stroke="#38bdf8" stroke-width="4" stroke-linecap="round"/>
 <polygon points="370.0,245.0 350.0,255.0 350.0,235.0" fill="#38bdf8"/>
 <text x="310.0" y="259.0" text-anchor="middle" class="small" transform="rotate(0.0 310.0 259.0)" dominant-baseline="middle">fault report</text>
