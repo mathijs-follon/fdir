@@ -6,6 +6,8 @@ Portable C11 FDIR (Fault Detection, Isolation and Recovery) library for embedded
 
 FDIR is a fault-management pattern used in spacecraft, aviation, and safety-critical embedded systems. When a software component fails, the system detects the fault, isolates the affected entity, and applies a configurable recovery action: restart, degradation, safe mode, or reboot. `fdir` provides a small, deterministic framework for this behaviour.
 
+The library is inspired by FDIR modules written for CubeSat RTOS projects at university. Reimplementing the same patterns from scratch for each project is impractical, so the common parts were extracted into this reusable library.
+
 The core library uses no dynamic allocation and has no operating-system dependency. Platform-specific behaviour is provided through a small set of port hooks. A C++20/23 header-only interface is also provided.
 
 ## Design
