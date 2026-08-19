@@ -128,6 +128,18 @@ const fdir_health_snapshot_t *fdir_health_snapshot(fdir_entity_id_t id)
     return &g_health[id];
 }
 
+fdir_bool_t fdir_health_snapshot_copy(fdir_entity_id_t id, fdir_health_snapshot_t *out)
+{
+    if (out == NULL || id >= g_entity_limit) {
+        return 0U;
+    }
+
+    fdir_port_sync_enter();
+    *out = g_health[id];
+    fdir_port_sync_exit();
+    return 1U;
+}
+
 fdir_bool_t fdir_health_is_stale(fdir_entity_id_t id, uint32_t now_ms, uint32_t max_age_ms)
 {
     const fdir_health_snapshot_t *snapshot = fdir_health_snapshot(id);

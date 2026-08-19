@@ -133,6 +133,30 @@ TEST(test_health_ignores_out_of_range_entity)
     ASSERT(fdir_health_snapshot(FDIR_ENTITY_NONE) == NULL);
 }
 
+TEST(test_health_snapshot_copy)
+{
+    fdir_entity_id_t id = setup();
+    fdir_health_snapshot_t copied;
+
+    fdir_health_set(id, FDIR_HEALTH_DEGRADED, 9U, "copy me");
+    ASSERT_EQ_INT(fdir_health_snapshot_copy(id, &copied), 1);
+    ASSERT_EQ_INT(copied.health, FDIR_HEALTH_DEGRADED);
+    ASSERT_EQ_INT(copied.error_code, 9U);
+    ASSERT_STR_EQ(copied.detail, "copy me");
+    ASSERT_EQ_INT(fdir_health_snapshot_copy(FDIR_ENTITY_NONE, &copied), 0);
+    ASSERT_EQ_INT(fdir_health_snapshot_copy(id, NULL), 0);
+}
+
+TEST(test_anomaly_id_entity_subsystem_namespaces)
+{
+    const uint16_t entity_key = FDIR_ANOMALY_ID(127U, FDIR_REASON_INIT_FAILED);
+    const uint16_t sub_key = FDIR_SUBSYSTEM_ANOMALY_ID(72U, FDIR_REASON_INIT_FAILED);
+
+    ASSERT((entity_key & 0x8000U) == 0U);
+    ASSERT((sub_key & 0x8000U) != 0U);
+    ASSERT(entity_key != sub_key);
+}
+
 int main(void)
 {
     RUN(test_heartbeat_sets_ok);
@@ -144,5 +168,7 @@ int main(void)
     RUN(test_failed_entity_not_stale);
     RUN(test_snapshot_out_of_range);
     RUN(test_health_ignores_out_of_range_entity);
+    RUN(test_health_snapshot_copy);
+    RUN(test_anomaly_id_entity_subsystem_namespaces);
     return test_harness_summary();
 }

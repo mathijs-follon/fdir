@@ -79,7 +79,7 @@ Each `fdir_event_t` includes:
 
 | Field | Meaning |
 |-------|---------|
-| `anomaly_id` | Entity key: `FDIR_ANOMALY_ID(entity, reason)`; subsystem key: `FDIR_SUBSYSTEM_ANOMALY_ID(sub, reason)` |
+| `anomaly_id` | Entity key: `FDIR_ANOMALY_ID(entity, reason)` (bit 15 clear); subsystem key: `FDIR_SUBSYSTEM_ANOMALY_ID(sub, reason)` (bit 15 set). `FDIR_ENTITY_CAP` must not exceed 128. |
 | `severity` | `FDIR_SEVERITY_*` |
 | `phase` | `FDIR_ANOMALY_RAISED` or `FDIR_ANOMALY_CLEARED` (after restart or ground mark) |
 | `level` | `FDIR_LEVEL_ENTITY`, `SUBSYSTEM`, or `SYSTEM` |
@@ -161,8 +161,11 @@ void fdir_health_heartbeat_notify(fdir_entity_id_t id);
 void fdir_health_set(fdir_entity_id_t id, fdir_health_t health, uint16_t error_code, const char *detail);
 void fdir_health_reset(fdir_entity_id_t id);
 const fdir_health_snapshot_t *fdir_health_snapshot(fdir_entity_id_t id);
+fdir_bool_t fdir_health_snapshot_copy(fdir_entity_id_t id, fdir_health_snapshot_t *out);
 fdir_bool_t fdir_health_fault_is_latched(fdir_entity_id_t id, fdir_reason_t reason);
 ```
+
+`fdir_health_snapshot()` returns a live pointer; prefer `fdir_health_snapshot_copy()` under concurrent access (see [threading.md](threading.md)).
 
 Heartbeats do not clear `FDIR_HEALTH_FAILED`. Call `fdir_report_fault()` from the faulting worker to mark the entity failed and enqueue a report in one step.
 

@@ -1,9 +1,22 @@
 #include "fdir.h"
 
+#include <pthread.h>
 #include <stdio.h>
 #include <string.h>
 #include <time.h>
 #include <unistd.h>
+
+static pthread_mutex_t g_fdir_mutex = PTHREAD_MUTEX_INITIALIZER;
+
+static void port_lock(void)
+{
+    (void)pthread_mutex_lock(&g_fdir_mutex);
+}
+
+static void port_unlock(void)
+{
+    (void)pthread_mutex_unlock(&g_fdir_mutex);
+}
 
 static uint32_t port_now(void)
 {
@@ -34,6 +47,8 @@ fdir_port_t fdir_app_port(void)
         .get_now_ms     = port_now,
         .emit_event     = port_emit,
         .request_reboot = port_reboot,
+        .lock           = port_lock,
+        .unlock         = port_unlock,
     };
     return port;
 }

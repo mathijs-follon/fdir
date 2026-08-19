@@ -30,6 +30,11 @@ typedef uint8_t fdir_subsystem_id_t;
 #define FDIR_ENTITY_CAP 16
 #endif
 
+#if FDIR_ENTITY_CAP > 128
+#error FDIR_ENTITY_CAP must not exceed 128: entity anomaly_id values use the high \
+       byte with bit 15 clear; entity IDs >= 128 collide with subsystem-tagged keys
+#endif
+
 #ifndef FDIR_SUBSYSTEM_CAP
 #define FDIR_SUBSYSTEM_CAP 8
 #endif
@@ -101,11 +106,11 @@ typedef enum {
     FDIR_ANOMALY_CLEARED,
 } fdir_anomaly_phase_t;
 
-/** Stable ground-facing anomaly key derived from entity and reason. */
+/** Stable ground-facing anomaly key derived from entity and reason (bit 15 clear). */
 #define FDIR_ANOMALY_ID(entity, reason) \
     ((uint16_t)(((uint16_t)(entity) << 8) | (uint16_t)(reason)))
 
-/** Subsystem-scoped anomaly key (bit 15 set to distinguish from entity keys). */
+/** Subsystem-scoped anomaly key (bit 15 set; distinct from entity keys when entity ID < 128). */
 #define FDIR_SUBSYSTEM_ANOMALY_ID(sub, reason) \
     ((uint16_t)(0x8000U | ((uint16_t)(sub) << 8) | (uint16_t)(reason)))
 

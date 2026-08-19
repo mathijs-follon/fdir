@@ -21,7 +21,7 @@ systems.
 | A3 | **Isolation** is cooperative: workers use `fdir_worker_may_run()` and stop taking work when it returns zero. |
 | A4 | **Recovery** (`restart` callbacks, reboot hook) is implemented by the integrator and verified at system level. |
 | A5 | **Ground interface** (PUS, TM/TC, anomaly logging) is implemented in `emit_event`; this library does not format ECSS packets. |
-| A6 | Entity/subsystem caps (`FDIR_ENTITY_CAP`, `FDIR_SUBSYSTEM_CAP`) and failure queue depth (`FDIR_FAILURE_QUEUE_CAP`, default 8) are sized for the mission and justified in the safety case. |
+| A6 | Entity/subsystem caps (`FDIR_ENTITY_CAP`, max 128 for unique anomaly IDs; `FDIR_SUBSYSTEM_CAP`) and failure queue depth (`FDIR_FAILURE_QUEUE_CAP`, default 8) are sized for the mission and justified in the safety case. |
 
 ## Provided behaviour (element scope)
 
