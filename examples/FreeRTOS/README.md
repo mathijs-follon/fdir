@@ -6,17 +6,26 @@ Three FreeRTOS tasks drive three scenarios sequentially:
 2. Worker faults three times - restart budget exhausted, mode changes to DEGRADED
 3. Two critical subsystems marked unavailable - mode changes to SAFE
 
-Port hooks (`port.c`) are wired to FreeRTOS queue and task primitives. `FreeRTOSConfig.h` is configured for the Posix port.
-
-Init the submodule if not done yet:
+Init the submodule before building either variant:
 
 ```
 git submodule update --init examples/FreeRTOS/FreeRTOS-Kernel
 ```
 
-Build and run:
+## c/
+
+Port hooks are strong overrides of the weak symbols in `port.c`, wired to `xQueueSend`, `xTaskGetTickCount`, and `vTaskSuspend`. `FreeRTOSConfig.h` is configured for the Posix port.
 
 ```
 make freertos
 ./build/example_FreeRTOS
+```
+
+## cxx/
+
+Port hooks are supplied as a `fdir::Port` struct of lambdas in `main.cpp`. The FreeRTOS kernel `.c` files are compiled as C; only the application file is compiled as C++. `FreeRTOSConfig.h` guards `vAssertCalled` with `extern "C"` when included from C++.
+
+```
+make freertos_cxx
+./build/example_FreeRTOS_cxx
 ```

@@ -22,6 +22,7 @@ Failure Detection, Isolation, and Recovery (FDIR) library for embedded systems a
 ```
 make          # build libfdir.a and compile_commands.json
 make test     # build and run all tests
+make examples # build all six example binaries
 make clean
 ```
 
@@ -37,7 +38,7 @@ Five weak functions in `src/port.c` must be overridden for your target. Three ar
 | `fdir_emit_event` | no | no-op | Log or downlink an fdir event |
 | `fdir_request_reboot` | no | no-op | Trigger a hardware reset |
 
-Implement strong definitions of these in a any source file in your application. See `examples/getting_started/main.c` for a minimal POSIX implementation.
+Implement strong definitions of these in any source file in your application. See `examples/getting_started/c/main.c` for a minimal POSIX implementation, or supply them as a `fdir::Port` struct when using the C++ API (`include/fdir.hpp`).
 
 ## Integrating
 
@@ -83,32 +84,41 @@ fdir_check_watchdogs();
 
 ## Examples
 
+Each example has a `c/` and a `cxx/` subdirectory. The C variants use strong overrides of the weak port-hook symbols. The C++ variants supply port hooks as a `fdir::Port` struct of lambdas passed to `fdir::Supervisor::create()`.
+
 ### getting_started
 
-Minimal single-file example with no RTOS and no threads. Covers fault/restart, budget exhaustion, and watchdog detection. Port hooks are implemented inline at the bottom of the file.
+Minimal example with no RTOS and no threads. Covers fault/restart, budget exhaustion, and watchdog detection.
 
 ```
-make getting_started
-./build/getting_started
+make getting_started        # c/
+make getting_started_cxx    # cxx/
 ```
 
 ### filecopy
 
-Parallel directory copy CLI using worker threads supervised by fdir. Demonstrates multi-entity registration, per-worker heartbeating, and fault-driven restart/degrade on I/O errors.
+Parallel directory copy CLI. Worker threads share a bounded job queue and heartbeat fdir after each file. Demonstrates multi-entity registration and fault-driven restart/degrade on I/O errors.
 
 ```
-make filecopy
+make filecopy               # c/
 ./build/fcopy <src> <dst> [--workers N]
+
+make filecopy_cxx           # cxx/
+./build/fcopy_cxx <src> <dst> [--workers N]
 ```
 
 ### FreeRTOS
 
-Full FreeRTOS integration on the POSIX/Linux simulator. Three FreeRTOS tasks (worker, supervisor, scenario driver) drive watchdog miss, budget exhaustion, and dual-path SAFE mode. Port hooks are wired to FreeRTOS queue and task primitives.
+FreeRTOS integration on the POSIX/Linux simulator. Three tasks (worker, supervisor, scenario driver) drive watchdog miss, budget exhaustion, and dual-path SAFE mode.
 
 ```
 git submodule update --init examples/FreeRTOS/FreeRTOS-Kernel
-make freertos
+
+make freertos               # c/
 ./build/example_FreeRTOS
+
+make freertos_cxx           # cxx/ - kernel compiled as C, application as C++
+./build/example_FreeRTOS_cxx
 ```
 
 ## API reference
