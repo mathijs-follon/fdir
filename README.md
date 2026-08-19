@@ -1,6 +1,6 @@
 # fdir
 
-[![Compile and Test](https://github.com/mathijs-follon/fdir/actions/workflows/ci.yml/badge.svg)](https://github.com/mathijs-follon/fdir/actions/workflows/ci.yml)
+[![Compile and Test](https://github.com/mathijs-follon/fdir/actions/workflows/compile-and-test.yml/badge.svg)](https://github.com/mathijs-follon/fdir/actions/workflows/compile-and-test.yml)
 
 FDIR (Failure Detection, Isolation, and Recovery) is a fault management pattern used in spacecraft, aviation, and safety-critical embedded systems. When a software component fails, the system detects the fault, isolates the offending component, and recovers to a known-good state, potentially degrading gracefully rather than failing entirely.
 
