@@ -1,5 +1,7 @@
 # fdir
 
+[![Compile and Test](https://github.com/mathijs-follon/fdir/actions/workflows/ci.yml/badge.svg)](https://github.com/mathijs-follon/fdir/actions/workflows/ci.yml)
+
 FDIR (Failure Detection, Isolation, and Recovery) is a fault management pattern used in spacecraft, aviation, and safety-critical embedded systems. When a software component fails, the system detects the fault, isolates the offending component, and recovers to a known-good state, potentially degrading gracefully rather than failing entirely.
 
 This library implements that pattern for embedded and RTOS applications. Each software component (entity) registers a restart callback and a watchdog heartbeat. A supervisor monitors heartbeats and processes fault reports, applying a configurable recovery policy: restart the entity, degrade the system, enter safe mode, or request a reboot. Subsystems group entities on critical paths so the supervisor can escalate to safe mode when too many are unavailable simultaneously.
