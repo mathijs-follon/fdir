@@ -83,13 +83,15 @@ $(ROOT)/build/obj/%.o: $(ROOT)/src/%.c
 	$(COMPILER) $(CPPFLAGS) $(CFLAGS) -c $< -o $@
 
 test: all
-	@mkdir -p $(ROOT)/build/obj
-	@if [ -z "$(TEST_SOURCES)" ]; then \
-		echo "No test files found in $(ROOT)/tests/"; \
-	else \
-		$(COMPILER) $(CPPFLAGS) $(CFLAGS) $(TEST_SOURCES) $(LIBRARY) $(LINKERFLAGS) -o $(ROOT)/build/test_runner && \
-		$(ROOT)/build/test_runner; \
-	fi
+	@mkdir -p $(ROOT)/build/tests
+	@failed=0; \
+	for src in $(TEST_SOURCES); do \
+		name=$$(basename $$src .c); \
+		bin=$(ROOT)/build/tests/$$name; \
+		$(COMPILER) $(CPPFLAGS) $(CFLAGS) $$src $(LIBRARY) $(LINKERFLAGS) -o $$bin || { failed=1; continue; }; \
+		$$bin || failed=1; \
+	done; \
+	exit $$failed
 
 getting_started: $(LIBRARY)
 	@mkdir -p $(ROOT)/build

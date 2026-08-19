@@ -16,7 +16,7 @@ uint32_t fdir_get_now_ms(void)
     return (uint32_t)(xTaskGetTickCount() * portTICK_PERIOD_MS);
 }
 
-int fdir_post_failure(const fdir_failure_report_t *report)
+int fdir_submit_failure(const fdir_failure_report_t *report)
 {
     if (xQueueSend(g_failure_queue, report, 0) == pdTRUE) {
         return 0;

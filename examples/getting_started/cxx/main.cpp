@@ -22,7 +22,7 @@
 #include <time.h>
 
 /*
- * Thread-safe-enough single-threaded failure queue. post_failure pushes here;
+ * Thread-safe-enough single-threaded failure queue. submit_failure pushes here;
  * drain() calls supervisor.handle_failure() for each pending report. On an RTOS
  * this role is filled by a kernel message queue.
  */
@@ -82,7 +82,7 @@ int main()
             clock_gettime(CLOCK_MONOTONIC, &t);
             return static_cast<uint32_t>(t.tv_sec * 1000 + t.tv_nsec / 1000000);
         },
-        .post_failure = [](const fdir::FailureReport &r) {
+        .submit_failure = [](const fdir::FailureReport &r) {
             g_failures.push(r);
             return 0;
         },
@@ -125,6 +125,15 @@ int main()
     });
     if (!sensor_result) { fprintf(stderr, "register_entity failed\n"); return 1; }
     auto &sensor = *sensor_result;
+
+    /* Startup self-test: report a fault immediately if the entity fails its
+     * initialization check. fdir handles restart/degrade just like a runtime
+     * fault. In a real application this would verify hardware or calibration. */
+    const bool sensor_ok = true;
+    if (!sensor_ok) {
+        sensor.report_fault(fdir::Reason::IoError, 0, "startup self-test failed");
+        drain(sup);
+    }
 
     sensor.heartbeat();
     printf("mode: %s\n\n", mode_name(sup.mode()));

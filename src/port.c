@@ -6,7 +6,7 @@ __attribute((weak)) uint32_t fdir_get_now_ms(void)
     abort();
 }
 
-__attribute((weak)) int fdir_post_failure(const fdir_failure_report_t *report)
+__attribute((weak)) int fdir_submit_failure(const fdir_failure_report_t *report)
 {
     (void)report;
     abort();

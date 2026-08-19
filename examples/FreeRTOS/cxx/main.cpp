@@ -93,8 +93,8 @@ int main()
 {
     /*
      * The failure queue is created before the port because the port's
-     * post_failure hook captures g_failure_queue by value at lambda creation
-     * time — but xQueueCreate hasn't run yet. Instead, the lambda reads
+     * submit_failure hook captures g_failure_queue by value at lambda creation
+     * time, but xQueueCreate hasn't run yet. Instead, the lambda reads
      * g_failure_queue at call time, which is after xQueueCreate below.
      */
     g_failure_queue = xQueueCreate(16, sizeof(fdir::FailureReport));
@@ -103,7 +103,7 @@ int main()
         .get_now_ms = []() -> uint32_t {
             return static_cast<uint32_t>(xTaskGetTickCount() * portTICK_PERIOD_MS);
         },
-        .post_failure = [](const fdir::FailureReport &r) {
+        .submit_failure = [](const fdir::FailureReport &r) {
             return xQueueSend(g_failure_queue, &r, 0) == pdTRUE ? 0 : -1;
         },
         .isolate_current_worker = [] { vTaskSuspend(nullptr); },
@@ -153,6 +153,14 @@ int main()
     });
     if (!entity) { printf("register_entity failed\n"); return 1; }
     g_worker.emplace(std::move(*entity));
+
+    /* Startup self-test before the scheduler runs. Report a fault immediately
+     * on failure; fdir applies normal restart/degrade logic when the supervisor
+     * task drains the queue after vTaskStartScheduler(). */
+    const bool worker_ok = true;
+    if (!worker_ok) {
+        g_worker->report_fault(fdir::Reason::IoError, 0, "startup self-test failed");
+    }
 
     g_worker->heartbeat();
 

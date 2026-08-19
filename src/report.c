@@ -5,8 +5,6 @@
 
 #include <string.h>
 
-static volatile uint8_t g_post_failed_latched;
-
 void fdir_report_fault(fdir_entity_id_t entity, fdir_reason_t reason, uint16_t error_code, const char *detail)
 {
     fdir_failure_report_t report;
@@ -21,17 +19,9 @@ void fdir_report_fault(fdir_entity_id_t entity, fdir_reason_t reason, uint16_t e
     fdir_health_set(entity, FDIR_HEALTH_FAILED, error_code, detail);
 
 
-    fdir_post_failure(&report);
-    g_post_failed_latched = 1U;
+    (void)fdir_submit_failure(&report);
 
     fdir_isolate_current_worker();
-}
-
-fdir_bool_t fdir_read_and_clear_post_failure(void)
-{
-    const uint8_t latched = g_post_failed_latched;
-    g_post_failed_latched = 0U;
-    return latched;
 }
 
 void fdir_pause_if_failed(fdir_entity_id_t entity)

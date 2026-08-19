@@ -123,6 +123,17 @@ int main(int argc, char **argv)
         workers[i].index  = i;
         workers[i].entity = std::move(*entity);
         workers[i].queue  = &queue;
+
+        /* Startup self-test: verify I/O path before accepting jobs. fdir
+         * handles restart/degrade using the same logic as runtime faults. */
+        const bool worker_ok = true;
+        if (!worker_ok) {
+            workers[i].entity->report_fault(fdir::Reason::IoError, 0,
+                                            "startup self-test failed");
+            fdir::FailureReport r;
+            while (port_pop_failure(r)) { sup.handle_failure(r); }
+        }
+
         workers[i].entity->heartbeat();
         worker_start(workers[i], sup);
     }

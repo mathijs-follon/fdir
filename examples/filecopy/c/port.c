@@ -47,7 +47,7 @@ uint32_t fdir_get_now_ms(void)
     return (uint32_t)(ts.tv_sec * 1000 + ts.tv_nsec / 1000000);
 }
 
-int fdir_post_failure(const fdir_failure_report_t *report)
+int fdir_submit_failure(const fdir_failure_report_t *report)
 {
     pthread_mutex_lock(&g_fqueue.lock);
     if (g_fqueue.count == FPORT_QUEUE_CAP) {

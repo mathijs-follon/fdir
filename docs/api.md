@@ -13,7 +13,7 @@
 
 // 1. implement port hooks in any .c file in your application
 uint32_t fdir_get_now_ms(void)                              { return platform_ticks_ms(); }
-int      fdir_post_failure(const fdir_failure_report_t *r)  { return queue_push(r); }
+int      fdir_submit_failure(const fdir_failure_report_t *r) { return queue_push(r); }
 void     fdir_isolate_current_worker(void)                  { task_delete_self(); }
 void     fdir_emit_event(const fdir_event_t *e)             { log_event(e); }      // optional
 void     fdir_request_reboot(const char *reason)            { platform_reboot(); } // optional
@@ -45,7 +45,7 @@ fdir_failure_report_t r = {
     .reason     = FDIR_REASON_IO_ERROR,
     .error_code = errno,
 };
-fdir_post_failure(&r);
+fdir_submit_failure(&r);
 
 // 6. supervisor loop: dedicated task or periodic callback
 fdir_failure_report_t report;
@@ -61,14 +61,14 @@ Five weak functions in `src/port.c` must be overridden for your target. Three ar
 | Hook | Required | Default | Purpose |
 |------|----------|---------|---------|
 | `fdir_get_now_ms` | yes | abort | Return monotonic time in milliseconds |
-| `fdir_post_failure` | yes | abort | Enqueue a failure report for the supervisor |
+| `fdir_submit_failure` | yes | abort | Enqueue a failure report for the supervisor |
 | `fdir_isolate_current_worker` | yes | abort | Stop the faulting task/thread |
 | `fdir_emit_event` | no | no-op | Log or downlink an fdir event |
 | `fdir_request_reboot` | no | no-op | Trigger a hardware reset |
 
 ```c
 uint32_t fdir_get_now_ms(void);
-int      fdir_post_failure(const fdir_failure_report_t *r);
+int      fdir_submit_failure(const fdir_failure_report_t *r);
 void     fdir_isolate_current_worker(void);
 void     fdir_emit_event(const fdir_event_t *event);
 void     fdir_request_reboot(const char *reason);
@@ -154,7 +154,7 @@ g++ -std=c++23 ...    # uses std::expected
 auto result = fdir::Supervisor::create(
     fdir::Port{
         .get_now_ms             = []() -> uint32_t { return platform_ticks_ms(); },
-        .post_failure           = [](const fdir::FailureReport &r) { return queue_push(r); },
+        .submit_failure         = [](const fdir::FailureReport &r) { return queue_push(r); },
         .isolate_current_worker = [] { task_delete_self(); },
         .emit_event             = [](const fdir::Event &e) { log_event(e); },     // optional
         .request_reboot         = [](std::string_view reason) { platform_reboot(); }, // optional
@@ -240,3 +240,4 @@ void      Supervisor::enter_degraded();
 void      Supervisor::enter_safe();
 void      Supervisor::try_reboot(std::string_view reason);
 ```
+

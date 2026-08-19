@@ -57,7 +57,7 @@ fdir_config_t fdir_config_default(void);
 /**
  * Initialise FDIR. Copies config (NULL uses fdir_config_default()).
  * Override the required weak port hooks in port.h before calling
- * (fdir_get_now_ms, fdir_post_failure, fdir_isolate_current_worker);
+ * (fdir_get_now_ms, fdir_submit_failure, fdir_isolate_current_worker);
  * the defaults abort().
  */
 fdir_status_t fdir_init(const fdir_config_t *config);

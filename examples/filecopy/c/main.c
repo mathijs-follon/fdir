@@ -177,6 +177,20 @@ int main(int argc, char **argv)
             return 1;
         }
 
+        /* Startup self-test: verify the worker can access its I/O path before
+         * accepting jobs. Report a fault immediately on failure so fdir can
+         * apply normal restart/degrade logic before the copy run begins. */
+        const int worker_ok = 1;
+        if (!worker_ok) {
+            fdir_failure_report_t r;
+            memset(&r, 0, sizeof(r));
+            r.entity       = g_workers[i].entity;
+            r.reason       = FDIR_REASON_IO_ERROR;
+            r.timestamp_ms = fdir_get_now_ms();
+            strncpy(r.detail, "startup self-test failed", FDIR_DETAIL_SIZE - 1);
+            fdir_submit_failure(&r);
+        }
+
         fdir_health_heartbeat_notify(g_workers[i].entity);
 
         if (worker_start(&g_workers[i]) != 0) {

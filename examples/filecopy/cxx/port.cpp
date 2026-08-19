@@ -26,7 +26,7 @@ fdir::Port make_port()
             clock_gettime(CLOCK_MONOTONIC, &ts);
             return static_cast<uint32_t>(ts.tv_sec * 1000 + ts.tv_nsec / 1000000);
         },
-        .post_failure = [](const fdir::FailureReport &r) {
+        .submit_failure = [](const fdir::FailureReport &r) {
             std::lock_guard lock(g_mu);
             g_pending.push(r);
             return 0;

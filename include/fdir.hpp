@@ -183,7 +183,7 @@ struct Event {
 
 struct Port {
     std::function<uint32_t()>                 get_now_ms;
-    std::function<int(const FailureReport &)> post_failure;
+    std::function<int(const FailureReport &)> submit_failure;
     std::function<void()>                     isolate_current_worker;
     std::function<void(const Event &)>        emit_event;
     std::function<void(std::string_view)>     request_reboot;
@@ -439,9 +439,9 @@ uint32_t fdir_get_now_ms(void)
     return fdir::detail::active_port().get_now_ms();
 }
 
-int fdir_post_failure(const fdir_failure_report_t *report)
+int fdir_submit_failure(const fdir_failure_report_t *report)
 {
-    auto &fn = fdir::detail::active_port().post_failure;
+    auto &fn = fdir::detail::active_port().submit_failure;
     if (!fn) { return -1; }
     return fn(fdir::FailureReport::from_c(*report));
 }

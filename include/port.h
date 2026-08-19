@@ -10,7 +10,7 @@ extern "C" {
 /*
  * Weak port hooks (__attribute__((weak)) in src/port.c). Provide strong
  * definitions in the integrating firmware to override the defaults.
- * Required (default abort()): fdir_get_now_ms, fdir_post_failure,
+ * Required (default abort()): fdir_get_now_ms, fdir_submit_failure,
  * fdir_isolate_current_worker.
  * Optional (default no-op): fdir_emit_event, fdir_request_reboot.
  * C++ users can skip these; the wrapper supplies a different interface.
@@ -18,7 +18,7 @@ extern "C" {
 
 uint32_t fdir_get_now_ms(void);
 
-int fdir_post_failure(const fdir_failure_report_t *report);
+int fdir_submit_failure(const fdir_failure_report_t *report);
 
 void fdir_isolate_current_worker(void);
 

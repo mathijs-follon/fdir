@@ -59,7 +59,7 @@ static void worker_task(void *param)
             r.error_code  = 42;
             r.timestamp_ms = fdir_get_now_ms();
             strncpy(r.detail, "simulated I/O error", FDIR_DETAIL_SIZE - 1);
-            fdir_post_failure(&r);
+            fdir_submit_failure(&r);
         }
 
         vTaskDelay(pdMS_TO_TICKS(300));
@@ -111,7 +111,7 @@ static void scenario_task(void *param)
     r.reason       = FDIR_REASON_USER;
     r.timestamp_ms = fdir_get_now_ms();
     strncpy(r.detail, "dual-path forced", FDIR_DETAIL_SIZE - 1);
-    fdir_post_failure(&r);
+    fdir_submit_failure(&r);
 
     vTaskDelay(pdMS_TO_TICKS(1500));
 
@@ -152,6 +152,20 @@ int main(void)
     }
 
     g_failure_queue = xQueueCreate(8, sizeof(fdir_failure_report_t));
+
+    /* Startup self-test before the scheduler runs. Report a fault immediately
+     * on failure; fdir applies normal restart/degrade logic when the supervisor
+     * task drains the queue after vTaskStartScheduler(). */
+    const int worker_ok = 1;
+    if (!worker_ok) {
+        fdir_failure_report_t r;
+        memset(&r, 0, sizeof(r));
+        r.entity       = g_worker_id;
+        r.reason       = FDIR_REASON_IO_ERROR;
+        r.timestamp_ms = 0;
+        strncpy(r.detail, "startup self-test failed", FDIR_DETAIL_SIZE - 1);
+        xQueueSend(g_failure_queue, &r, 0);
+    }
 
     fdir_health_heartbeat_notify(g_worker_id);
 

@@ -117,7 +117,7 @@ static void *worker_thread(void *arg)
             report.error_code  = (uint16_t)errno;
             report.timestamp_ms = fdir_get_now_ms();
             snprintf(report.detail, FDIR_DETAIL_SIZE, "%.28s", job.src);
-            fdir_post_failure(&report);
+            fdir_submit_failure(&report);
             /*
              * fdir_isolate_current_worker() may be called from the supervisor
              * via the restart/isolate path, which calls pthread_exit on this

@@ -21,7 +21,7 @@
 #include <time.h>
 
 /*
- * Single-threaded failure queue. fdir_post_failure() pushes here;
+ * Single-threaded failure queue. fdir_submit_failure() pushes here;
  * the main loop pops and calls fdir_handle_failure(). On an RTOS this
  * would be a message queue drained by a dedicated supervisor task.
  */
@@ -68,7 +68,7 @@ static void report_fault(fdir_entity_id_t entity, const char *detail)
     r.error_code   = 1;
     r.timestamp_ms = fdir_get_now_ms();
     strncpy(r.detail, detail, FDIR_DETAIL_SIZE - 1);
-    fdir_post_failure(&r);
+    fdir_submit_failure(&r);
 
     fdir_failure_report_t pending;
     while (queue_pop(&pending)) {
@@ -111,6 +111,14 @@ int main(void)
         return 1;
     }
 
+    /* Startup self-test: report a fault immediately if the entity fails its
+     * initialization check. fdir handles restart/degrade just like a runtime
+     * fault. In a real application this would verify hardware or calibration. */
+    const int sensor_ok = 1;
+    if (!sensor_ok) {
+        report_fault(sensor, "startup self-test failed");
+    }
+
     fdir_health_heartbeat_notify(sensor);
     printf("mode: %s\n\n", mode_name(fdir_system_mode()));
 
@@ -141,7 +149,7 @@ int main(void)
 
 /*
  * Port hook overrides. The weak defaults in src/port.c abort() for the three
- * required hooks (fdir_get_now_ms, fdir_post_failure, fdir_isolate_current_worker)
+ * required hooks (fdir_get_now_ms, fdir_submit_failure, fdir_isolate_current_worker)
  * and no-op for the two optional ones (fdir_emit_event, fdir_request_reboot).
  */
 
@@ -152,7 +160,7 @@ uint32_t fdir_get_now_ms(void)
     return (uint32_t)(t.tv_sec * 1000 + t.tv_nsec / 1000000);
 }
 
-int fdir_post_failure(const fdir_failure_report_t *report)
+int fdir_submit_failure(const fdir_failure_report_t *report)
 {
     queue_push(report);
     return 0;
