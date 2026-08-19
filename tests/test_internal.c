@@ -259,9 +259,11 @@ TEST(test_port_lock_used_during_report)
     desc.user = NULL;
     (void)fdir_entity_register(&desc, &id);
 
+    g_lock_calls = 0;
+    g_unlock_calls = 0;
     (void)fdir_report_fault(id, FDIR_REASON_IO_ERROR, 1U, "lock");
-    ASSERT(g_lock_calls > 0);
-    ASSERT(g_unlock_calls > 0);
+    ASSERT_EQ_INT(g_lock_calls, 1);
+    ASSERT_EQ_INT(g_unlock_calls, 1);
 }
 
 int main(void)

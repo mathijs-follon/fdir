@@ -18,26 +18,31 @@ void fdir_failure_queue_init(void)
     g_full_latched = 0U;
 }
 
-int fdir_failure_queue_put(const fdir_failure_report_t *report)
+int fdir_failure_queue_put_unsafe(const fdir_failure_report_t *report)
 {
     if (report == NULL) {
         return -1;
     }
 
-    fdir_port_sync_enter();
-
     if (g_count >= FDIR_FAILURE_QUEUE_CAP) {
         g_full_latched = 1U;
-        fdir_port_sync_exit();
         return -1;
     }
 
     g_slots[g_tail] = *report;
     g_tail = (uint8_t)((g_tail + 1U) % FDIR_FAILURE_QUEUE_CAP);
     g_count++;
-
-    fdir_port_sync_exit();
     return 0;
+}
+
+int fdir_failure_queue_put(const fdir_failure_report_t *report)
+{
+    int rc;
+
+    fdir_port_sync_enter();
+    rc = fdir_failure_queue_put_unsafe(report);
+    fdir_port_sync_exit();
+    return rc;
 }
 
 int fdir_failure_queue_get(fdir_failure_report_t *out)
@@ -69,4 +74,14 @@ fdir_bool_t fdir_failure_queue_full_latched(void)
     latched = g_full_latched;
     fdir_port_sync_exit();
     return latched;
+}
+
+uint8_t fdir_failure_queue_pending_count(void)
+{
+    uint8_t count;
+
+    fdir_port_sync_enter();
+    count = g_count;
+    fdir_port_sync_exit();
+    return count;
 }

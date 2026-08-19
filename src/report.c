@@ -8,9 +8,9 @@
 
 #include <string.h>
 
-static fdir_status_t enqueue_failure(const fdir_failure_report_t *report)
+static fdir_status_t enqueue_failure_unsafe(const fdir_failure_report_t *report)
 {
-    if (fdir_failure_queue_put(report) != 0) {
+    if (fdir_failure_queue_put_unsafe(report) != 0) {
         if ((report->flags & FDIR_FAULT_FLAG_CRITICAL) != 0U) {
             return FDIR_ERR_BUSY;
         }
@@ -27,7 +27,13 @@ fdir_status_t fdir_submit_failure(const fdir_failure_report_t *report)
     if (fdir_supervision_enabled() == 0U) {
         return FDIR_OK;
     }
-    return enqueue_failure(report);
+    if (fdir_failure_queue_put(report) != 0) {
+        if ((report->flags & FDIR_FAULT_FLAG_CRITICAL) != 0U) {
+            return FDIR_ERR_BUSY;
+        }
+        return FDIR_ERR_STATE;
+    }
+    return FDIR_OK;
 }
 
 static fdir_status_t report_fault_impl(fdir_entity_id_t entity, fdir_reason_t reason,
@@ -35,12 +41,14 @@ static fdir_status_t report_fault_impl(fdir_entity_id_t entity, fdir_reason_t re
 {
     fdir_failure_report_t report;
     const fdir_health_snapshot_t *snapshot;
-
-    if (fdir_supervision_enabled() == 0U) {
-        return FDIR_OK;
-    }
+    fdir_status_t status;
 
     fdir_port_sync_enter();
+
+    if (fdir_supervision_enabled_unsafe() == 0U) {
+        fdir_port_sync_exit();
+        return FDIR_OK;
+    }
 
     if (fdir_health_fault_is_latched_unsafe(entity, reason)) {
         fdir_port_sync_exit();
@@ -53,8 +61,6 @@ static fdir_status_t report_fault_impl(fdir_entity_id_t entity, fdir_reason_t re
         return FDIR_OK;
     }
 
-    fdir_port_sync_exit();
-
     memset(&report, 0, sizeof(report));
     report.entity = entity;
     report.reason = reason;
@@ -63,14 +69,12 @@ static fdir_status_t report_fault_impl(fdir_entity_id_t entity, fdir_reason_t re
     report.flags = flags;
     fdir_internal_copy_detail(report.detail, sizeof(report.detail), detail);
 
-    {
-        fdir_status_t status = enqueue_failure(&report);
-        if (status != FDIR_OK) {
-            return status;
-        }
+    status = enqueue_failure_unsafe(&report);
+    if (status != FDIR_OK) {
+        fdir_port_sync_exit();
+        return status;
     }
 
-    fdir_port_sync_enter();
     fdir_health_set_unsafe(entity, FDIR_HEALTH_FAILED, error_code, detail);
     fdir_port_sync_exit();
     return FDIR_OK;

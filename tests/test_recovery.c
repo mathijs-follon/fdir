@@ -479,6 +479,28 @@ TEST(test_on_exhausted_reboot_action)
     ASSERT_STR_EQ(g_last_reboot_reason, "x");
 }
 
+TEST(test_entity_register_rejects_restart_on_exhausted)
+{
+    fdir_config_t cfg = fdir_config_default();
+    fdir_entity_desc_t desc;
+    fdir_entity_id_t id = 0U;
+
+    reset_fixtures();
+    {
+        fdir_port_t port = recovery_test_port();
+        (void)fdir_init(&cfg, &port);
+    }
+
+    desc = (fdir_entity_desc_t){0};
+    desc.name = "bad_exhausted";
+    desc.max_restarts = 1U;
+    desc.on_exhausted = FDIR_ACTION_RESTART;
+    desc.restart = restart_ok;
+
+    ASSERT_EQ_INT(fdir_entity_register(&desc, &id), FDIR_ERR_PARAM);
+    ASSERT_EQ_INT(fdir_entity_count(), 0U);
+}
+
 TEST(test_handle_failure_null_report)
 {
     init_one_entity(1U, 1U, FDIR_ACTION_DEGRADE);
@@ -506,6 +528,7 @@ int main(void)
     RUN(test_degrade_marks_linked_subsystem);
     RUN(test_subsystem_policy_override);
     RUN(test_on_exhausted_reboot_action);
+    RUN(test_entity_register_rejects_restart_on_exhausted);
     RUN(test_handle_failure_null_report);
     return test_harness_summary();
 }

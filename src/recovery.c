@@ -227,7 +227,11 @@ static void apply_action(fdir_entity_slot_t *slot, fdir_entity_id_t id, fdir_act
 
         case FDIR_ACTION_RESTART:
             if (try_restart(slot, id, report->reason) != 0) {
-                apply_action(slot, id, slot->desc.on_exhausted, report);
+                fdir_action_t fallback = slot->desc.on_exhausted;
+                if (fallback == FDIR_ACTION_RESTART) {
+                    fallback = FDIR_ACTION_NONE;
+                }
+                apply_action(slot, id, fallback, report);
             }
             break;
 
@@ -309,6 +313,11 @@ fdir_status_t fdir_entity_register(const fdir_entity_desc_t *desc, fdir_entity_i
         return FDIR_ERR_FULL;
     }
 
+    if (desc->on_exhausted == FDIR_ACTION_RESTART) {
+        fdir_port_sync_exit();
+        return FDIR_ERR_PARAM;
+    }
+
     id = g_entity_count++;
     g_entities[id].desc = *desc;
     fdir_internal_copy_detail(g_entities[id].name, sizeof(g_entities[id].name), desc->name);
@@ -359,6 +368,11 @@ fdir_bool_t fdir_supervision_enabled(void)
     enabled = g_supervision_enabled;
     fdir_port_sync_exit();
     return enabled;
+}
+
+fdir_bool_t fdir_supervision_enabled_unsafe(void)
+{
+    return g_supervision_enabled;
 }
 
 fdir_bool_t fdir_set_supervision_enabled(fdir_bool_t enabled)

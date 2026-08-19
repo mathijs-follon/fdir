@@ -299,6 +299,16 @@ TEST(test_report_fault_skips_when_latched)
     ASSERT_EQ_INT(g_restart_calls, 1);
 }
 
+TEST(test_report_fault_no_duplicate_enqueue_before_supervisor)
+{
+    fdir_entity_id_t id = setup_entity();
+
+    ASSERT_EQ_INT(fdir_report_fault(id, FDIR_REASON_IO_ERROR, 1U, "first"), FDIR_OK);
+    ASSERT_EQ_INT(fdir_failure_queue_pending_count(), 1U);
+    ASSERT_EQ_INT(fdir_report_fault(id, FDIR_REASON_IO_ERROR, 2U, "dup"), FDIR_OK);
+    ASSERT_EQ_INT(fdir_failure_queue_pending_count(), 1U);
+}
+
 int main(void)
 {
     RUN(test_report_fault_enqueues_for_supervisor);
@@ -312,5 +322,6 @@ int main(void)
     RUN(test_submit_failure_noncritical_queue_full);
     RUN(test_report_fault_skips_when_already_failed);
     RUN(test_report_fault_skips_when_latched);
+    RUN(test_report_fault_no_duplicate_enqueue_before_supervisor);
     return test_harness_summary();
 }

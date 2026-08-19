@@ -35,6 +35,9 @@ void fdir_internal_emit_subsystem_state(fdir_subsystem_id_t sub,
 
 fdir_status_t fdir_port_bind(const fdir_port_t *port);
 
+/** Unsynchronised; caller must hold fdir_port_sync. */
+fdir_bool_t fdir_supervision_enabled_unsafe(void);
+
 #ifdef __cplusplus
 }
 #endif

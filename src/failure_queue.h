@@ -13,8 +13,14 @@ extern "C" {
 
 void fdir_failure_queue_init(void);
 
+/** 0 on success, -1 if full (sets full latch). Caller must hold port sync. */
+int fdir_failure_queue_put_unsafe(const fdir_failure_report_t *report);
+
 /** 0 on success, -1 if full (sets full latch). */
 int fdir_failure_queue_put(const fdir_failure_report_t *report);
+
+/** Pending entries (for tests). */
+uint8_t fdir_failure_queue_pending_count(void);
 
 /** 0 on success, -1 if empty. */
 int fdir_failure_queue_get(fdir_failure_report_t *out);

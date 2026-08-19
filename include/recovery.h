@@ -21,8 +21,8 @@ typedef struct {
     uint8_t max_watchdog_restarts;
 
     /**
-     * Default action when restart budget is exhausted.
-     * Typically FDIR_ACTION_DEGRADE, UNAVAILABLE, SAFE, or REBOOT.
+     * Default action when restart budget is exhausted or restart() fails.
+     * FDIR_ACTION_RESTART is invalid (rejected at registration).
      */
     fdir_action_t on_exhausted;
 

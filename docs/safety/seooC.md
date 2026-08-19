@@ -25,7 +25,7 @@ systems.
 
 ## Provided behaviour (element scope)
 
-- Entity restart budgets (normal and watchdog paths) with configurable `on_exhausted` action.
+- Entity restart budgets (normal and watchdog paths) with configurable `on_exhausted` action (`FDIR_ACTION_RESTART` is rejected at registration).
 - Internal bounded failure queue; supervisor drain via `fdir_supervisor_tick()`.
 - Fault latch per entity+reason (ECSS 5.7.5.3c style deduplication of repeated reports).
 - Events with stable `anomaly_id` (`FDIR_ANOMALY_ID`), `severity`, `phase` (raised/cleared), and `level` (entity/subsystem/system).
@@ -45,7 +45,7 @@ systems.
 
 Failure reports are queued inside the library. Policy:
 
-1. **Critical** reports (`FDIR_FAULT_FLAG_CRITICAL` or `fdir_report_fault`): never drop silently. `fdir_report_fault` returns `FDIR_ERR_BUSY` when full; entity health is unchanged so the caller can retry after the supervisor drains the queue. `fdir_failure_queue_full_latched()` is set.
+1. **Critical** reports (`FDIR_FAULT_FLAG_CRITICAL` or `fdir_report_fault`): never drop silently. `fdir_report_fault` returns `FDIR_ERR_BUSY` when full; entity health is unchanged so the caller can retry after the supervisor drains the queue. `fdir_failure_queue_full_latched()` is set. Latch check, enqueue, and marking entity health failed run under one port sync critical section so duplicate reports for the same entity do not consume extra queue slots before the supervisor runs.
 2. **Non-critical** (`fdir_report_fault_ex` without critical flag): may return `FDIR_ERR_STATE` when full; document drop policy in the safety case.
 3. The supervisor must call `fdir_supervisor_tick()` often enough to drain the queue under peak fault rates.
 4. Log application queue saturation via `fdir_log_queue_overflow` where applicable.
